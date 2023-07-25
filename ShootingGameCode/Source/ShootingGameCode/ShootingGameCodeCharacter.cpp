@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h" // 네트워크 관련 코딩 시 필수
+#include "Public/Weapon.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -56,7 +57,7 @@ AShootingGameCodeCharacter::AShootingGameCodeCharacter()
 //
 void AShootingGameCodeCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	#include "Net/UnrealNetwork.h" // 네트워크 관련 코딩 시 필수
+	// #include "Net/UnrealNetwork.h" 네트워크 관련 코딩 시 필수
 
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AShootingGameCodeCharacter, PlayerRotation);
@@ -92,6 +93,58 @@ void AShootingGameCodeCharacter::Tick(float DeltaTime)
 
 }
 
+void AShootingGameCodeCharacter::EquipTestWeapon(TSubclassOf<class AWeapon> WeaponClass)
+{
+	EquipWeapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass, FVector(0, 0, 0), FRotator(0, 0, 0));
+
+
+	AWeapon* pWeapon = Cast<AWeapon>(EquipWeapon);
+	if (IsValid(pWeapon) == false)
+	{
+		return;
+	}
+
+	pWeapon->OwnChar = this;
+
+	EquipWeapon->AttachToComponent(GetMesh(),
+		FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("weapon"));
+
+	// weapon을 컴포넌트로 어태치.
+	// getmesh가 부모 
+}
+
+void AShootingGameCodeCharacter::ReqReload_Implementation()
+{
+	ResReload();
+}
+
+void AShootingGameCodeCharacter::ResReload_Implementation()
+{
+	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(EquipWeapon);
+	if (InterfaceObj == nullptr)
+	{
+		return;
+	}
+
+	InterfaceObj->Execute_EventReload(EquipWeapon);
+}
+
+void AShootingGameCodeCharacter::ReqShoot_Implementation()
+{
+	ResShoot();
+}
+
+void AShootingGameCodeCharacter::ResShoot_Implementation()
+{
+	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(EquipWeapon);
+	if(InterfaceObj == nullptr)
+	{
+		return;
+	}
+
+	InterfaceObj->Execute_EventTrigger(EquipWeapon);
+}
+
 FRotator AShootingGameCodeCharacter::GetPlayerRotation()
 {
 	ACharacter* pChar0 = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
@@ -120,6 +173,12 @@ void AShootingGameCodeCharacter::SetupPlayerInputComponent(class UInputComponent
 
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AShootingGameCodeCharacter::Look);
+
+		//Shoot
+		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &AShootingGameCodeCharacter::Shoot);
+
+		//Reload
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &AShootingGameCodeCharacter::Reload);
 
 	}
 
@@ -159,6 +218,16 @@ void AShootingGameCodeCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+
+void AShootingGameCodeCharacter::Shoot(const FInputActionValue& Value)
+{
+	ReqShoot();
+}
+
+void AShootingGameCodeCharacter::Reload(const FInputActionValue& Value)
+{
+	ReqReload();
 }
 
 

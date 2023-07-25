@@ -37,6 +37,15 @@ class AShootingGameCodeCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
 
+
+	/** Shoot Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* ShootAction;
+
+	/** Reload Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* ReloadAction;
+
 public:
 	AShootingGameCodeCharacter();
 	
@@ -48,6 +57,12 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	/** Called for Shoot input */
+	void Shoot(const FInputActionValue& Value);
+
+	/** Called for Reload input */
+	void Reload(const FInputActionValue& Value);
 			
 
 protected:
@@ -58,6 +73,25 @@ protected:
 	virtual void BeginPlay();
 
 	virtual void Tick(float DeltaTime) override;
+
+
+public:
+	UFUNCTION(Server, Reliable)
+	void ReqShoot();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void ResShoot();
+
+	UFUNCTION(Server, Reliable)
+	void ReqReload();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void ResReload();
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void EquipTestWeapon(TSubclassOf<class AWeapon> WeaponClass);
+	//AWeapon을 상속 받는 클래스를 모두 파라미터로 사용 할 수 있음
 
 
 public:
@@ -75,5 +109,7 @@ public:
 	UFUNCTION(BlueprintPure)
 	FRotator GetPlayerRotation();
 
+	UPROPERTY()
+	AActor* EquipWeapon;
 };
 
