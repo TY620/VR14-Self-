@@ -13,10 +13,15 @@ AWeapon::AWeapon()
 	PrimaryActorTick.bCanEverTick = true;
 
 	WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	//subobjcet는 weapon을 상속받은 액터를 다 쓸 수 있음
+	//WeaponMesh 는 StaticMeshComponent를 생성 (Mesh라는 이름으로)
+	//subobjcet는 weapon을 상속받은 액터를 다 쓸 수 있음 
+	//상속 받은 블루프린트는 자동 생성
+
 	WeaponMesh->SetCollisionProfileName("OverlapAllDynamic");
+	//WeaponMesh는 오버랩올다이나믹으로 콜리전 설정
 
 	SetRootComponent(WeaponMesh);
+	//WeaponMesh는 루트 컴포넌트
 
 }
 
@@ -42,6 +47,7 @@ void AWeapon::EventTrigger_Implementation()
 	}
 
 	OwnChar->PlayAnimMontage(ShootMontage);
+	//캐릭터 레퍼런스 OwnChar는 ShootMontage를 PlayAnimMontage
 }
 
 void AWeapon::EventReload_Implementation()
@@ -50,8 +56,11 @@ void AWeapon::EventReload_Implementation()
 	{
 		return;
 	}
+	// !IsValid(ReloadMontage)
+
 
 	OwnChar->PlayAnimMontage(ReloadMontage);
+	//캐릭터 레퍼런스 OwnChar는 ReloadMontage를 PlayAnimMontage
 }
 
 
@@ -62,6 +71,11 @@ void AWeapon::EventShoot_Implementation()
 		WeaponMesh->GetSocketRotation("Muzzle"),
 		FVector(0.1f, 0.1f, 0.1f));
 
+	//EventShoot 함수가 실행되었을때 : 
+	// ShootEffect를 WeaponMesh의 "Muzzle" 소켓의 위치와 회전값에서 구현
+
+
 	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), ShootSound,
 		WeaponMesh->GetSocketLocation("Muzzle"));
+	// ShootSound를 WeaponMesh의 "Muzzle" 소켓의 위치에서 구현
 }

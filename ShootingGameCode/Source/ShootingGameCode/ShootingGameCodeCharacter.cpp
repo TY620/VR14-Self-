@@ -88,7 +88,7 @@ void AShootingGameCodeCharacter::Tick(float DeltaTime)
 
 	if (HasAuthority() == true) // 서버가 맞으면
 	{
-		PlayerRotation = GetControlRotation(); // PlayerRotation은 컨트롤러의 회전값
+		PlayerRotation = GetControlRotation(); // PlayerRotation은 컨트롤러(플레이어0)의 회전값
 	}
 
 }
@@ -96,36 +96,48 @@ void AShootingGameCodeCharacter::Tick(float DeltaTime)
 void AShootingGameCodeCharacter::EquipTestWeapon(TSubclassOf<class AWeapon> WeaponClass)
 {
 	EquipWeapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass, FVector(0, 0, 0), FRotator(0, 0, 0));
-
+	// EquipWeapon은 월드(로테이션 0,0,0)(로테이터(0,0,0)에서 SpawnActor됨
 
 	AWeapon* pWeapon = Cast<AWeapon>(EquipWeapon);
+	// 만약 EquipWeapon이 AWeapon 혹은 자식이 아니라면 -> pWeapon = nullptr 이 됨
+	
+	// pWeapon은 AWeapon의 형변환
+	// AWeapon의 레퍼런스 EquipWeapon
+	// 플레이어 무기 장착에 대한 유효성 검사인지? 
+	// 아니면 들고 있는 액터가 무기가 맞는지에 대한 유효성 검사인지
 	if (IsValid(pWeapon) == false)
 	{
 		return;
 	}
-
+	
 	pWeapon->OwnChar = this;
+	
+	// pWeapon의 캐릭터 레퍼런스는 지금 플레이어
 
 	EquipWeapon->AttachToComponent(GetMesh(),
 		FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("weapon"));
-
-	// weapon을 컴포넌트로 어태치.
+	// weapon의 메쉬를 컴포넌트로 어태치.
 	// getmesh가 부모 
 }
 
-void AShootingGameCodeCharacter::ReqReload_Implementation()
+void AShootingGameCodeCharacter::ReqReload_Implementation() // 서버에서 실행되고
 {
-	ResReload();
+	ResReload(); // 클라이언트로 전달
 }
 
 void AShootingGameCodeCharacter::ResReload_Implementation()
 {
 	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(EquipWeapon);
+	//InterfaceObj는 IWeaponInterface의 형변환
+	// Weapon 레퍼런스 EquipWeapon은
+	
 	if (InterfaceObj == nullptr)
 	{
 		return;
 	}
+	// if(!InterfaceObj)
 
+	
 	InterfaceObj->Execute_EventReload(EquipWeapon);
 }
 
@@ -152,7 +164,7 @@ FRotator AShootingGameCodeCharacter::GetPlayerRotation()
 	{
 		return GetControlRotation();
 	}
-	// #include "Kismet/GameplayStatics.h"
+	
 	return PlayerRotation;
 }
 

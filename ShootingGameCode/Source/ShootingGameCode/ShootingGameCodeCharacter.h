@@ -24,6 +24,8 @@ class AShootingGameCodeCharacter : public ACharacter
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputMappingContext* DefaultMappingContext;
+	// InputMappingContext 레퍼런스의 DefaultMappingContext 변수 생성
+	// DefaultMappingContext == IMC
 
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -37,7 +39,6 @@ class AShootingGameCodeCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
 
-
 	/** Shoot Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ShootAction;
@@ -45,6 +46,8 @@ class AShootingGameCodeCharacter : public ACharacter
 	/** Reload Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ReloadAction;
+
+	//DefaultMappingContext에 IA jump, IA move, IA look, IA shoot, IA reload 생성
 
 public:
 	AShootingGameCodeCharacter();
@@ -76,9 +79,11 @@ protected:
 
 
 public:
+	//소유 클라이언트에서 호출하고 서버에서 실행되는
 	UFUNCTION(Server, Reliable)
 	void ReqShoot();
 
+	//서버에서 호출하고, 서버와 모든 클라이언트에서 실행되는
 	UFUNCTION(NetMulticast, Reliable)
 	void ResShoot();
 
@@ -89,10 +94,9 @@ public:
 	void ResReload();
 
 public:
+	//TSubclassOf : AWeapon을 상속 받은 클래스(본인포함)는 입력 값을 받을 수 있음
 	UFUNCTION(BlueprintCallable)
 	void EquipTestWeapon(TSubclassOf<class AWeapon> WeaponClass);
-	//AWeapon을 상속 받는 클래스를 모두 파라미터로 사용 할 수 있음
-
 
 public:
 	/** Returns CameraBoom subobject **/
@@ -101,14 +105,18 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 public:
-	UPROPERTY(Replicated) // 리플리케이트 설정
-	// UPROPERTY(ReplicatedUsing = OnFuc) notify
+	// 리플리케이트 설정
+	// UPROPERTY(ReplicatedUsing = OnFuc) notify -> ???
+	UPROPERTY(Replicated)
 
-	FRotator PlayerRotation; // BP기준 : 로테이터 변수 생성
+	FRotator PlayerRotation;
+	//로테이터 변수 생성
 
+	//플레이어 0(index) 인지 확인하여 회전 값 전달 받는 함수
 	UFUNCTION(BlueprintPure)
 	FRotator GetPlayerRotation();
 
+	// 액터 클래스 EquipWeapon변수 생성
 	UPROPERTY()
 	AActor* EquipWeapon;
 };
