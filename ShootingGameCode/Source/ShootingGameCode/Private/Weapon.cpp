@@ -17,15 +17,18 @@ AWeapon::AWeapon()
 	//상속 받은 블루프린트는 자동 생성
 	WeaponMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	
+	//WeaponMesh는 weapon이라는 콜리전 프리셋으로 콜리전 설정
+	WeaponMesh->SetCollisionProfileName("weapon");
+	//WeaponMesh에 물리 시뮬을 활성화
+	WeaponMesh->SetSimulatePhysics(true);
 
-	WeaponMesh->SetCollisionProfileName("OverlapAllDynamic");
-	//WeaponMesh는 오버랩올다이나믹으로 콜리전 설정
-
+	//네트워크에서 복제 가능하도록(서버,클라)
 	bReplicates = true;
+	//움직임이 네트워크에서 복제 가능하도록
 	SetReplicateMovement(true);
 
-	SetRootComponent(WeaponMesh);
 	//WeaponMesh는 루트 컴포넌트
+	SetRootComponent(WeaponMesh);
 
 }
 
@@ -45,43 +48,39 @@ void AWeapon::Tick(float DeltaTime)
 
 void AWeapon::EventTrigger_Implementation()
 {
-	if (IsValid(ShootMontage) == false) // 유효성 검사
+	if (IsValid(ShootMontage) == false)
 	{
 		return;
 	}
 
-	OwnChar->PlayAnimMontage(ShootMontage);
 	//캐릭터 레퍼런스 OwnChar는 ShootMontage를 PlayAnimMontage
+	OwnChar->PlayAnimMontage(ShootMontage);
 }
 
 void AWeapon::EventReload_Implementation()
 {
-	if (IsValid(ReloadMontage) == false) // 유효성 검사
+	if (IsValid(ReloadMontage) == false)
 	{
 		return;
 	}
-	// !IsValid(ReloadMontage)
+	// !IsValid(ReloadMontage);
 
-
-	OwnChar->PlayAnimMontage(ReloadMontage);
 	//캐릭터 레퍼런스 OwnChar는 ReloadMontage를 PlayAnimMontage
+	OwnChar->PlayAnimMontage(ReloadMontage);
 }
 
 
 void AWeapon::EventShoot_Implementation()
 {
+	//EventShoot 함수가 실행되었을때 : ShootEffect를 WeaponMesh의 "Muzzle" 소켓의 위치와 회전값에서 구현
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ShootEffect,
 		WeaponMesh->GetSocketLocation("Muzzle"),
 		WeaponMesh->GetSocketRotation("Muzzle"),
 		FVector(0.1f, 0.1f, 0.1f));
 
-	//EventShoot 함수가 실행되었을때 : 
-	// ShootEffect를 WeaponMesh의 "Muzzle" 소켓의 위치와 회전값에서 구현
-
-
+	// ShootSound를 WeaponMesh의 "Muzzle" 소켓의 위치에서 구현
 	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), ShootSound,
 		WeaponMesh->GetSocketLocation("Muzzle"));
-	// ShootSound를 WeaponMesh의 "Muzzle" 소켓의 위치에서 구현
 }
 
 void AWeapon::EventPickUp_Implementation(ACharacter* targetChar)
@@ -92,14 +91,18 @@ void AWeapon::EventPickUp_Implementation(ACharacter* targetChar)
 	//WeaponMesh를 시뮬을 끔
 	WeaponMesh->SetSimulatePhysics(false);
 
+	//weapon메시를 targetChar(캐릭터 레퍼런스)의 메시에 고정된 위치로 어태치함
 	AttachToComponent(targetChar->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("weapon"));
 }
 
 void AWeapon::EventDrop_Implementation(ACharacter* targetChar)
 {
+	//캐릭터에게 소유되지 않음
 	OwnChar = nullptr;
 
+	//WeaponMesh를 시뮬을 킴
 	WeaponMesh->SetSimulatePhysics(true);
 
+	//현재 액터에서 액터를 분리시킴(회전과 이동 변화 없이)
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 }

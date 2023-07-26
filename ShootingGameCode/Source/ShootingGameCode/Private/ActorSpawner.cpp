@@ -17,8 +17,10 @@ void AActorSpawner::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//서버인지 확인
 	if (HasAuthority())
 	{
+		//월드에 AWeapon클래스(spawnclass에 Weapon을 넣어줌)를 액터 위치(actorspawner)로 액터 생성
 		GetWorld()->SpawnActor<AWeapon>(SpawnClass, GetActorTransform());
 	}
 	

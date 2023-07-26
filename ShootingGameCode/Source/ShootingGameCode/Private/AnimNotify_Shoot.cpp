@@ -8,23 +8,21 @@
 
 void UAnimNotify_Shoot::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
+	//pChar는 ShootingGameCodeCharacter 형변환 (메쉬컴포넌트는 캐릭터임(owner))
 	AShootingGameCodeCharacter* pChar = Cast <AShootingGameCodeCharacter> (MeshComp->GetOwner());
 	if (IsValid(pChar) == false)
 	{
 		return;
 	}
-	//pChar는 ShootingGameCodeCharacter 형변환 (메쉬컴포넌트는 캐릭터임(owner))
-	//유효성 검사
 
+	//InterfaceObj는 WeaponInterface 형변환 (ShootingGameCodeCharacter의 Weapon 레퍼런스인 EquipWeapon)
 	IWeaponInterface* InterfaceObj = Cast <IWeaponInterface> (pChar->EquipWeapon);
 	if (InterfaceObj == nullptr)
 	{
 		return;
 	}
-	//InterfaceObj는 WeaponInterface 형변환
-	// ㄴ(ShootingGameCodeCharacter의 Weapon 레퍼런스 EquipWeapon)
 	//유효성 검사
 
-	InterfaceObj->Execute_EventShoot(pChar->EquipWeapon);
 	//인터페이스의 EventShoot 실행
+	InterfaceObj->Execute_EventShoot(pChar->EquipWeapon);
 }

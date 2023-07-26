@@ -23,8 +23,8 @@ class AShootingGameCodeCharacter : public ACharacter
 	
 	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputMappingContext* DefaultMappingContext;
 	// InputMappingContext 레퍼런스의 DefaultMappingContext 변수 생성
+	class UInputMappingContext* DefaultMappingContext;
 	// DefaultMappingContext == IMC
 
 	/** Jump Input Action */
@@ -55,7 +55,7 @@ class AShootingGameCodeCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* DropAction;
 
-	//DefaultMappingContext에 IA jump, IA move, IA look, IA shoot, IA reload 생성
+	//DefaultMappingContext에 IA jump, IA move, IA look, IA shoot, IA reload, IA PressF, IA Drop칸을 생성
 
 public:
 	AShootingGameCodeCharacter();

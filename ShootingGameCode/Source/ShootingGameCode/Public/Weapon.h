@@ -27,63 +27,69 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 public:
+	// 밑에 있는 함수들은 WeaponInterface에서 사용되는 함수라서 반드시 implementation 함수로 정의해야 함
+
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	//EventTrigger 함수 생성(Implementation을 사용해야하는)
 	void EventTrigger();
-	//EventTrigger 함수 생성(implementation을 사용해야하는)
 
-	virtual void EventTrigger_Implementation() override;
 	//가상 eventTrigger_implementation 함수 오버라이딩
+	virtual void EventTrigger_Implementation() override;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void EventReload();
 	//EventReload 함수 생성(implementation을 사용해야하는)
+	void EventReload();
 
-	virtual void EventReload_Implementation() override;
 	//가상 eventReload_implementation 함수 오버라이딩
+	virtual void EventReload_Implementation() override;
 	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void EventShoot();
 	//EventShoot 함수 생성(implementation을 사용해야하는)
+	void EventShoot();
 
-	virtual void EventShoot_Implementation() override;
 	//가상 eventShoot_implementation 함수 오버라이딩
+	virtual void EventShoot_Implementation() override;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	//EventPickUp 함수 생성(implementation을 사용해야하는)
 	void EventPickUp(ACharacter* targetChar);
 
+	//가상 eventpickup_implementation 함수 오버라이딩
 	virtual void EventPickUp_Implementation(ACharacter* targetChar) override;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	//EventDrop 함수 생성(implementation을 사용해야하는)
 	void EventDrop(ACharacter* targetChar);
 
+	//가상 eventdrop_implementation 함수 오버라이딩
 	virtual void EventDrop_Implementation(ACharacter* targetChar) override;
 
 	// BP인터페이스 기본 구조
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UStaticMeshComponent* WeaponMesh;
 	// WeaponMesh라는 스태틱 메쉬 컴포넌트 생성
+	class UStaticMeshComponent* WeaponMesh;
 
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UAnimMontage* ShootMontage;
 	//애님 몽타주 레퍼런스 ShootMontage 변수 생성
+	UAnimMontage* ShootMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UAnimMontage* ReloadMontage;
 	//애님 몽타주 레퍼런스 reloadMontage 변수 생성
+	UAnimMontage* ReloadMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UParticleSystem* ShootEffect;
 	//파티클 시스템 레퍼런스 ShootEffect 변수 생성
+	UParticleSystem* ShootEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	USoundBase* ShootSound;
 	//사운드 베이스 레퍼런스 ShootSound 변수 생성
+	USoundBase* ShootSound;
 
 	UPROPERTY(BlueprintReadWrite)
-	ACharacter* OwnChar;
 	//캐릭터 오브젝트 레퍼런스 OwnChar 변수 생성
+	ACharacter* OwnChar;
 };

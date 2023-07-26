@@ -101,7 +101,9 @@ void AShootingGameCodeCharacter::ReqPressF_Implementation()
 	AActor* nearestWeapon = FindNearestWeapon();
 
 	if (IsValid(nearestWeapon) == false)
+	{
 		return;
+	}
 
 	EquipWeapon = nearestWeapon;
 
@@ -113,6 +115,8 @@ void AShootingGameCodeCharacter::OnRep_EquipWeapon()
 	//컨트롤러 Yaw사용은 EquipWeapon 유효성에 따라 true, false
 	bUseControllerRotationYaw = IsValid(EquipWeapon);
 	
+	//InterfaceObj는 WeaponInterface 형변환 (EquipWeapon을)
+	//EquipWeapon이 WeaponInterface를 구현하는 경우
 	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(EquipWeapon);
 
 	if (InterfaceObj == nullptr)
@@ -120,6 +124,7 @@ void AShootingGameCodeCharacter::OnRep_EquipWeapon()
 		return;
 	}
 
+	// InterfaceObj가 IWeaponInterface를 구현하는 무기일 경우, 해당 무기의 EventPickUp 함수를 호출
 	InterfaceObj->Execute_EventPickUp(EquipWeapon, this);
 }
 
@@ -130,9 +135,8 @@ void AShootingGameCodeCharacter::ReqDrop_Implementation()
 
 void AShootingGameCodeCharacter::ResDrop_Implementation()
 {
+	//InterfaceObj는 IWeaponInterface의 형변환 (Weapon 레퍼런스 EquipWeapon을)
 	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(EquipWeapon);
-	//InterfaceObj는 IWeaponInterface의 형변환
-	// Weapon 레퍼런스 EquipWeapon은
 
 	if (InterfaceObj == nullptr)
 	{
@@ -147,29 +151,28 @@ void AShootingGameCodeCharacter::ResDrop_Implementation()
 
 void AShootingGameCodeCharacter::EquipTestWeapon(TSubclassOf<class AWeapon> WeaponClass)
 {
-	EquipWeapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass, FVector(0, 0, 0), FRotator(0, 0, 0));
 	// EquipWeapon은 월드(로테이션 0,0,0)(로테이터(0,0,0)에서 SpawnActor됨
+	EquipWeapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass, FVector(0, 0, 0), FRotator(0, 0, 0));
 
-	AWeapon* pWeapon = Cast<AWeapon>(EquipWeapon);
+	// pWeapon은 AWeapon의 형변환 (AWeapon의 레퍼런스 EquipWeapon을)
 	// 만약 EquipWeapon이 AWeapon 혹은 자식이 아니라면 -> pWeapon = nullptr 이 됨
+	// 들고 있는 액터가 무기가 맞는지에 대한 유효성 검사
+	AWeapon* pWeapon = Cast<AWeapon>(EquipWeapon);
 	
-	// pWeapon은 AWeapon의 형변환
-	// AWeapon의 레퍼런스 EquipWeapon
-	// 플레이어 무기 장착에 대한 유효성 검사인지? 
-	// 아니면 들고 있는 액터가 무기가 맞는지에 대한 유효성 검사인지
+	
+	// 플레이어 무기 장착에 대한 유효성 검사, 
 	if (IsValid(pWeapon) == false)
 	{
 		return;
 	}
 	
+	// pWeapon의 캐릭터 레퍼런스는 지금 플레이어
 	pWeapon->OwnChar = this;
 	
-	// pWeapon의 캐릭터 레퍼런스는 지금 플레이어
 
+	// weapon의 메쉬를 컴포넌트로 어태치. getmesh가 부모 
 	EquipWeapon->AttachToComponent(GetMesh(),
 		FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("weapon"));
-	// weapon의 메쉬를 컴포넌트로 어태치.
-	// getmesh가 부모 
 }
 
 AActor* AShootingGameCodeCharacter::FindNearestWeapon()
@@ -185,7 +188,9 @@ AActor* AShootingGameCodeCharacter::FindNearestWeapon()
 		double distance = FVector::Dist(target->GetActorLocation(), GetActorLocation());
 
 		if (nearestLength < distance)
+		{
 			continue;
+		}
 
 		nearestLength = distance;
 		nearestWeapon = target;
@@ -196,22 +201,23 @@ AActor* AShootingGameCodeCharacter::FindNearestWeapon()
 
 void AShootingGameCodeCharacter::ReqReload_Implementation() // 서버에서 실행되고
 {
-	ResReload(); // 클라이언트로 전달
+	// 클라이언트로 전달
+	ResReload();
 }
 
 void AShootingGameCodeCharacter::ResReload_Implementation()
 {
-	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(EquipWeapon);
 	//InterfaceObj는 IWeaponInterface의 형변환
-	// Weapon 레퍼런스 EquipWeapon은
+	//인터페이스가 있는 무기 레퍼런스인지 확인
+	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(EquipWeapon);
 	
 	if (InterfaceObj == nullptr)
 	{
 		return;
 	}
 	// if(!InterfaceObj)
-
 	
+	//유효하면 Reload실행
 	InterfaceObj->Execute_EventReload(EquipWeapon);
 }
 
