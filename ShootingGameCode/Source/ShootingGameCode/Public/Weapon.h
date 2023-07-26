@@ -48,6 +48,16 @@ public:
 	virtual void EventShoot_Implementation() override;
 	//가상 eventShoot_implementation 함수 오버라이딩
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void EventPickUp(ACharacter* targetChar);
+
+	virtual void EventPickUp_Implementation(ACharacter* targetChar) override;
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void EventDrop(ACharacter* targetChar);
+
+	virtual void EventDrop_Implementation(ACharacter* targetChar) override;
+
 	// BP인터페이스 기본 구조
 
 public:

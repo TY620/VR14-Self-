@@ -59,10 +59,13 @@ void AShootingGameCodeCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 {
 	// #include "Net/UnrealNetwork.h" 네트워크 관련 코딩 시 필수
 
+	// 리플리케이트 관련 변수 사용 할 때 마다 여기에 추가 해야됨
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AShootingGameCodeCharacter, PlayerRotation);
+	DOREPLIFETIME(AShootingGameCodeCharacter, EquipWeapon);
 
-	//리플리케이트 관련 변수 사용 할 때 마다 여기에 추가 해야됨
+	
+	// PlayerRotation, EquipWeapon
 
 }
 
@@ -93,6 +96,55 @@ void AShootingGameCodeCharacter::Tick(float DeltaTime)
 
 }
 
+void AShootingGameCodeCharacter::ReqPressF_Implementation()
+{
+	AActor* nearestWeapon = FindNearestWeapon();
+
+	if (IsValid(nearestWeapon) == false)
+		return;
+
+	EquipWeapon = nearestWeapon;
+
+	OnRep_EquipWeapon();
+}
+
+void AShootingGameCodeCharacter::OnRep_EquipWeapon()
+{
+	//컨트롤러 Yaw사용은 EquipWeapon 유효성에 따라 true, false
+	bUseControllerRotationYaw = IsValid(EquipWeapon);
+	
+	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(EquipWeapon);
+
+	if (InterfaceObj == nullptr)
+	{
+		return;
+	}
+
+	InterfaceObj->Execute_EventPickUp(EquipWeapon, this);
+}
+
+void AShootingGameCodeCharacter::ReqDrop_Implementation()
+{
+	ResDrop();
+}
+
+void AShootingGameCodeCharacter::ResDrop_Implementation()
+{
+	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(EquipWeapon);
+	//InterfaceObj는 IWeaponInterface의 형변환
+	// Weapon 레퍼런스 EquipWeapon은
+
+	if (InterfaceObj == nullptr)
+	{
+		return;
+	}
+	// if(!InterfaceObj)
+
+	InterfaceObj->Execute_EventDrop(EquipWeapon, this);
+
+	EquipWeapon = nullptr;
+}
+
 void AShootingGameCodeCharacter::EquipTestWeapon(TSubclassOf<class AWeapon> WeaponClass)
 {
 	EquipWeapon = GetWorld()->SpawnActor<AWeapon>(WeaponClass, FVector(0, 0, 0), FRotator(0, 0, 0));
@@ -118,6 +170,28 @@ void AShootingGameCodeCharacter::EquipTestWeapon(TSubclassOf<class AWeapon> Weap
 		FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("weapon"));
 	// weapon의 메쉬를 컴포넌트로 어태치.
 	// getmesh가 부모 
+}
+
+AActor* AShootingGameCodeCharacter::FindNearestWeapon()
+{
+	TArray<AActor*> actors;
+	GetCapsuleComponent()->GetOverlappingActors(actors, AWeapon::StaticClass());
+
+	double nearestLength = 99999999.0f;
+	AActor* nearestWeapon = nullptr;
+
+	for (AActor* target : actors)
+	{
+		double distance = FVector::Dist(target->GetActorLocation(), GetActorLocation());
+
+		if (nearestLength < distance)
+			continue;
+
+		nearestLength = distance;
+		nearestWeapon = target;
+	}
+
+	return nearestWeapon;
 }
 
 void AShootingGameCodeCharacter::ReqReload_Implementation() // 서버에서 실행되고
@@ -168,6 +242,11 @@ FRotator AShootingGameCodeCharacter::GetPlayerRotation()
 	return PlayerRotation;
 }
 
+bool AShootingGameCodeCharacter::IsEquip()
+{
+	return IsValid(EquipWeapon);
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Input
 
@@ -191,6 +270,12 @@ void AShootingGameCodeCharacter::SetupPlayerInputComponent(class UInputComponent
 
 		//Reload
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &AShootingGameCodeCharacter::Reload);
+
+		//PressF
+		EnhancedInputComponent->BindAction(PressFAction, ETriggerEvent::Started, this, &AShootingGameCodeCharacter::PressF);
+
+		//Drop
+		EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Started, this, &AShootingGameCodeCharacter::Drop);
 
 	}
 
@@ -241,6 +326,18 @@ void AShootingGameCodeCharacter::Reload(const FInputActionValue& Value)
 {
 	ReqReload();
 }
+
+void AShootingGameCodeCharacter::PressF(const FInputActionValue& Value)
+{
+	ReqPressF();
+}
+
+void AShootingGameCodeCharacter::Drop(const FInputActionValue& Value)
+{
+	ReqDrop();
+}
+
+
 
 
 

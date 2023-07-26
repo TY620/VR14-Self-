@@ -21,6 +21,7 @@ class SHOOTINGGAMECODE_API IWeaponInterface
 	GENERATED_BODY()
 
 public:
+	//함수 생성
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void EventTrigger();
 
@@ -29,5 +30,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void EventShoot();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void EventPickUp(ACharacter* targetChar);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void EventDrop(ACharacter* targetChar);
 
 };

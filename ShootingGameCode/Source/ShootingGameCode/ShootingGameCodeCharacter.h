@@ -47,6 +47,14 @@ class AShootingGameCodeCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* ReloadAction;
 
+	/** PressF Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* PressFAction;
+
+	/** Drop Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* DropAction;
+
 	//DefaultMappingContext에 IA jump, IA move, IA look, IA shoot, IA reload 생성
 
 public:
@@ -66,6 +74,12 @@ protected:
 
 	/** Called for Reload input */
 	void Reload(const FInputActionValue& Value);
+
+	/** Called for PressF input */
+	void PressF(const FInputActionValue& Value);
+
+	/** Called for Drop input */
+	void Drop(const FInputActionValue& Value);
 			
 
 protected:
@@ -93,10 +107,25 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void ResReload();
 
+	UFUNCTION(Server, Reliable)
+	void ReqPressF();
+
+	UFUNCTION()
+	void OnRep_EquipWeapon();
+
+	UFUNCTION(Server, Reliable)
+	void ReqDrop();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void ResDrop();
+
 public:
 	//TSubclassOf : AWeapon을 상속 받은 클래스(본인포함)는 입력 값을 받을 수 있음
 	UFUNCTION(BlueprintCallable)
 	void EquipTestWeapon(TSubclassOf<class AWeapon> WeaponClass);
+
+	UFUNCTION(BlueprintCallable)
+	AActor* FindNearestWeapon();
 
 public:
 	/** Returns CameraBoom subobject **/
@@ -109,15 +138,19 @@ public:
 	// UPROPERTY(ReplicatedUsing = OnFuc) notify -> ???
 	UPROPERTY(Replicated)
 
-	FRotator PlayerRotation;
 	//로테이터 변수 생성
+	FRotator PlayerRotation;
 
 	//플레이어 0(index) 인지 확인하여 회전 값 전달 받는 함수
 	UFUNCTION(BlueprintPure)
 	FRotator GetPlayerRotation();
 
 	// 액터 클래스 EquipWeapon변수 생성
-	UPROPERTY()
+	// 리플리케이트 설정
+	UPROPERTY(ReplicatedUsing = OnRep_EquipWeapon)
 	AActor* EquipWeapon;
+
+	UFUNCTION(BlueprintPure)
+	bool IsEquip();
 };
 
