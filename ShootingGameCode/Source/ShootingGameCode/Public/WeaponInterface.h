@@ -37,4 +37,8 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void EventDrop(ACharacter* targetChar);
 
+	//bool형 반환값 설정
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void IsCanPickUp(bool& IsCanPickUp);
+
 };

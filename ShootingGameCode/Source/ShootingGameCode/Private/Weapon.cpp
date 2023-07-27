@@ -4,6 +4,9 @@
 #include "Weapon.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
+#include "GameFramework/PlayerController.h"
+#include "GameFramework/SpringArmComponent.h"
+
 
 
 // Sets default values
@@ -78,9 +81,23 @@ void AWeapon::EventShoot_Implementation()
 		WeaponMesh->GetSocketRotation("Muzzle"),
 		FVector(0.1f, 0.1f, 0.1f));
 
-	// ShootSound를 WeaponMesh의 "Muzzle" 소켓의 위치에서 구현
+	// EventShoot 함수가 실행되었을때 : ShootSound를 WeaponMesh의 "Muzzle" 소켓의 위치에서 구현
 	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), ShootSound,
 		WeaponMesh->GetSocketLocation("Muzzle"));
+
+	//Aplayercontroller헤더 include
+	APlayerController* Shooter = GetWorld()->GetFirstPlayerController();
+
+	//카메라의 위치는 플레이어 컨트롤러의 카메라의 카메라 위치
+	FVector CameraLocation = Shooter->PlayerCameraManager->GetCameraLocation();
+	// 카메라 ForwardVector는 플레이어 컨트롤러의 카메라의 ForwardVector
+	FVector CameraForwardVector = Shooter->PlayerCameraManager->GetActorForwardVector();
+	// 카메라의 ForwardVector * 카메라의 발사 시작 길이 함수+플레이어 컨트롤러 카메라 위치가 Start
+	FVector Start = (CameraForwardVector * GetFireStartLength()) + CameraLocation;
+	// 카메라의 ForwardVector * 5000 + 플레이어 컨트롤러 카메라의 위치가 End
+	FVector End = (CameraForwardVector * 5000.0f) + CameraLocation;
+
+	ReqShoot(Start, End);
 }
 
 void AWeapon::EventPickUp_Implementation(ACharacter* targetChar)
@@ -105,4 +122,57 @@ void AWeapon::EventDrop_Implementation(ACharacter* targetChar)
 
 	//현재 액터에서 액터를 분리시킴(회전과 이동 변화 없이)
 	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+}
+
+void AWeapon::IsCanPickUp_Implementation(bool& IsCanPickUp)
+{
+	if (OwnChar != nullptr)
+	{
+		IsCanPickUp = false;
+		return;
+	}
+	
+	IsCanPickUp = true;
+	
+}
+
+void AWeapon::ReqShoot_Implementation(FVector vStart, FVector vEnd)
+{
+	FHitResult Result;
+	// 추적할 오브젝트 타입
+	FCollisionObjectQueryParams CollisionObjectQuery;
+	CollisionObjectQuery.AddObjectTypesToQuery(ECollisionChannel::ECC_Pawn);
+	CollisionObjectQuery.AddObjectTypesToQuery(ECollisionChannel::ECC_WorldStatic);
+	CollisionObjectQuery.AddObjectTypesToQuery(ECollisionChannel::ECC_WorldDynamic);
+	CollisionObjectQuery.AddObjectTypesToQuery(ECollisionChannel::ECC_PhysicsBody);
+	CollisionObjectQuery.AddObjectTypesToQuery(ECollisionChannel::ECC_Vehicle);
+	CollisionObjectQuery.AddObjectTypesToQuery(ECollisionChannel::ECC_Destructible);
+	//예외설정만 해서는 실행이 안됨, 충돌 오브젝트 타입 다 설정해야 함.
+
+	// 예외 설정
+	FCollisionQueryParams CollisionQuery;
+	CollisionQuery.AddIgnoredActor(OwnChar);
+
+	//Line Trace오브젝트
+	GetWorld()->LineTraceSingleByObjectType(Result, vStart, vEnd, CollisionObjectQuery);
+	//디버그 라인 세팅
+	DrawDebugLine(GetWorld(), vStart, vEnd, FColor::Yellow, true);
+}
+
+float AWeapon::GetFireStartLength()
+{
+	if (IsValid(OwnChar) == false)
+	{
+		return 0.0f;
+	}
+	//스프링 암 컴포넌트사용하기 위해 헤더 include
+	// Arm은 USpringArmComponent Ownchar의 스프링암 컴포넌트 형변환
+	USpringArmComponent* Arm = Cast<USpringArmComponent>(OwnChar->GetComponentByClass(USpringArmComponent::StaticClass()));
+	if (IsValid(Arm) == false)
+	{
+		return 0.0f;
+	}
+
+	return Arm->TargetArmLength + 100;
+	
 }

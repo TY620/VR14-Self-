@@ -106,6 +106,8 @@ void AShootingGameCodeCharacter::ReqPressF_Implementation()
 	}
 
 	EquipWeapon = nearestWeapon;
+	//소유권 설정(장착 무기의 Owner는 현재 컨트롤러)
+	EquipWeapon->SetOwner(GetController()); 
 
 	OnRep_EquipWeapon();
 }
@@ -185,6 +187,15 @@ AActor* AShootingGameCodeCharacter::FindNearestWeapon()
 
 	for (AActor* target : actors)
 	{
+		//
+		bool IsCanPickUp = false;
+		IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(target);
+		InterfaceObj->Execute_IsCanPickUp(target, IsCanPickUp);
+		if(IsCanPickUp == false)
+		{
+			continue;
+		}
+
 		double distance = FVector::Dist(target->GetActorLocation(), GetActorLocation());
 
 		if (nearestLength < distance)

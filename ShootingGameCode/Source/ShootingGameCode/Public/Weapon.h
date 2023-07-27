@@ -64,15 +64,27 @@ public:
 	//가상 eventdrop_implementation 함수 오버라이딩
 	virtual void EventDrop_Implementation(ACharacter* targetChar) override;
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	//유효성 검사 함수 생성(implementation을 사용해야하는)
+	void IsCanPickUp(bool& IsCanPickUp);
+
+	//가상 IsCanPickUp_implementation 함수 오버라이딩
+	virtual void IsCanPickUp_Implementation(bool& IsCanPickUp) override;
+
 	// BP인터페이스 기본 구조
+
+public:
+	UFUNCTION(Server, Reliable)
+	void ReqShoot(FVector vStart, FVector vEnd);
+
+public:
+	float GetFireStartLength();
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	// WeaponMesh라는 스태틱 메쉬 컴포넌트 생성
 	class UStaticMeshComponent* WeaponMesh;
 
-
-public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	//애님 몽타주 레퍼런스 ShootMontage 변수 생성
 	UAnimMontage* ShootMontage;
