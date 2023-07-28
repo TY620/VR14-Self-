@@ -12,6 +12,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h" // 네트워크 관련 코딩 시 필수
 #include "Public/Weapon.h"
+#include "ShootingPlayerState.h"
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -93,6 +94,20 @@ void AShootingGameCodeCharacter::Tick(float DeltaTime)
 	{
 		PlayerRotation = GetControlRotation(); // PlayerRotation은 컨트롤러(플레이어0)의 회전값
 	}
+
+}
+
+float AShootingGameCodeCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	AShootingPlayerState* ps = Cast<AShootingPlayerState>(GetPlayerState());
+	if(IsValid(ps) == false)
+	{
+		return 0.0f;
+	}
+
+	ps->AddDamage(DamageAmount);
+
+	return DamageAmount;
 
 }
 

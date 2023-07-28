@@ -71,14 +71,32 @@ public:
 	//가상 IsCanPickUp_implementation 함수 오버라이딩
 	virtual void IsCanPickUp_Implementation(bool& IsCanPickUp) override;
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void EventResetAmmo();
+
+	virtual void EventResetAmmo_Implementation() override;
+
 	// BP인터페이스 기본 구조
 
 public:
 	UFUNCTION(Server, Reliable)
 	void ReqShoot(FVector vStart, FVector vEnd);
+	
+	UFUNCTION()
+	void OnRep_Ammo();
+
+public:
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE bool IsCanShoot() const;
 
 public:
 	float GetFireStartLength();
+
+	bool UseAmmo();
+
+	void UpdateAmmoToHUD(int NewAmmo);
+
+	void SetAmmo(int NewAmmo);
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -104,4 +122,7 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 	//캐릭터 오브젝트 레퍼런스 OwnChar 변수 생성
 	ACharacter* OwnChar;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Ammo)
+	int Ammo;
 };

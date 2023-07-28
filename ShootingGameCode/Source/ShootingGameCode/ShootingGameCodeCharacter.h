@@ -91,6 +91,9 @@ protected:
 
 	virtual void Tick(float DeltaTime) override;
 
+	//AActor 정의 안에 있는 TakeDamage 오버라이드
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser);
+
 
 public:
 	//소유 클라이언트에서 호출하고 서버에서 실행되는

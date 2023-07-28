@@ -41,4 +41,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void IsCanPickUp(bool& IsCanPickUp);
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void EventResetAmmo();
+
 };

@@ -6,7 +6,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
-
+#include "Net/UnrealNetwork.h"
+#include "ShootingHUD.h"
 
 
 // Sets default values
@@ -30,6 +31,8 @@ AWeapon::AWeapon()
 	//움직임이 네트워크에서 복제 가능하도록
 	SetReplicateMovement(true);
 
+	Ammo = 30;
+
 	//WeaponMesh는 루트 컴포넌트
 	SetRootComponent(WeaponMesh);
 
@@ -40,6 +43,13 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	
+}
+
+void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps)const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AWeapon, Ammo);
 }
 
 // Called every frame
@@ -75,6 +85,11 @@ void AWeapon::EventReload_Implementation()
 
 void AWeapon::EventShoot_Implementation()
 {
+	if(IsCanShoot() == false)
+	{
+		return;
+	}
+
 	//EventShoot 함수가 실행되었을때 : ShootEffect를 WeaponMesh의 "Muzzle" 소켓의 위치와 회전값에서 구현
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ShootEffect,
 		WeaponMesh->GetSocketLocation("Muzzle"),
@@ -110,10 +125,16 @@ void AWeapon::EventPickUp_Implementation(ACharacter* targetChar)
 
 	//weapon메시를 targetChar(캐릭터 레퍼런스)의 메시에 고정된 위치로 어태치함
 	AttachToComponent(targetChar->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, FName("weapon"));
+
+	// 총을 줍고 나서 Ammo 세팅
+	UpdateAmmoToHUD(Ammo);
 }
 
 void AWeapon::EventDrop_Implementation(ACharacter* targetChar)
 {
+	//총 버리기 전에 0으로 세팅하고 디태치 진행
+	UpdateAmmoToHUD(0);
+	
 	//캐릭터에게 소유되지 않음
 	OwnChar = nullptr;
 
@@ -136,8 +157,18 @@ void AWeapon::IsCanPickUp_Implementation(bool& IsCanPickUp)
 	
 }
 
+void AWeapon::EventResetAmmo_Implementation()
+{
+	SetAmmo(30);
+}
+
 void AWeapon::ReqShoot_Implementation(FVector vStart, FVector vEnd)
 {
+	if(UseAmmo() == false)
+	{
+		return;
+	}
+	
 	FHitResult Result;
 	// 추적할 오브젝트 타입
 	FCollisionObjectQueryParams CollisionObjectQuery;
@@ -154,9 +185,40 @@ void AWeapon::ReqShoot_Implementation(FVector vStart, FVector vEnd)
 	CollisionQuery.AddIgnoredActor(OwnChar);
 
 	//Line Trace오브젝트
-	GetWorld()->LineTraceSingleByObjectType(Result, vStart, vEnd, CollisionObjectQuery);
+	//Line Trace 검사 bool 변수
+	bool isHit = GetWorld()->LineTraceSingleByObjectType(Result, vStart, vEnd, CollisionObjectQuery);
 	//디버그 라인 세팅
 	DrawDebugLine(GetWorld(), vStart, vEnd, FColor::Yellow, true);
+
+	if(isHit == false)
+	{
+		return;
+	}
+
+	ACharacter* HitChar = Cast<ACharacter>(Result.GetActor());
+	
+	if (HitChar == nullptr)
+	{
+		return;
+	}
+	// 데미지 받는 액터, 데미지, 데미지 주는 컨트롤러, 데미지의 원인(AWeapon), 데미지 타입
+	UGameplayStatics::ApplyDamage(HitChar, 10, OwnChar->GetController
+		(), this, UDamageType::StaticClass());
+}
+
+void AWeapon::OnRep_Ammo()
+{
+	UpdateAmmoToHUD(Ammo);
+}
+
+bool AWeapon::IsCanShoot() const
+{
+	if (Ammo <= 0)
+	{
+		return false;
+	}
+
+	return true;
 }
 
 float AWeapon::GetFireStartLength()
@@ -175,4 +237,49 @@ float AWeapon::GetFireStartLength()
 
 	return Arm->TargetArmLength + 100;
 	
+}
+
+bool AWeapon::UseAmmo()
+{
+	if (IsCanShoot() == false)
+	{
+		return false;
+	}
+
+	Ammo = Ammo - 1;
+	OnRep_Ammo();
+	return true;
+}
+
+void AWeapon::UpdateAmmoToHUD(int NewAmmo)
+{
+	//캐릭터가 총을 들고 있는지 확인
+	if(IsValid(OwnChar) == false)
+	{
+		return;
+	}
+	
+	//pPlayer0은 해당 플레이어 컨트롤러
+	APlayerController* pPlayer0 = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	//pOwnController는 현재 캐릭터의 컨트롤러
+	AController* pOwnController = OwnChar->GetController();
+
+	if (pPlayer0 != pOwnController)
+	{
+		return;
+	}
+
+	AShootingHUD* pHUD = Cast<AShootingHUD>(pPlayer0->GetHUD());
+	if (IsValid(pHUD) == false)
+	{
+		return;
+	}
+
+	pHUD->OnUpdateMyAmmo(Ammo);
+}
+
+void AWeapon::SetAmmo(int NewAmmo)
+{
+	Ammo = NewAmmo;
+	OnRep_Ammo();
 }
