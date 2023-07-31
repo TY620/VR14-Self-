@@ -6,7 +6,48 @@
 #include "WeaponInterface.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Character.h"
+#include "Engine/DataTable.h" // 구조체
 #include "Weapon.generated.h"
+
+class AWeapon;
+
+// 구조체
+USTRUCT(BlueprintType)
+struct FST_Weapon : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	//기본 생성자
+	FST_Weapon() : StaticMesh(nullptr), ShootMontage(nullptr), ReloadMontage(nullptr), SoundBase(nullptr), FireEffect(nullptr), MaxAmmo(30), Damage(10), WeaponClass(nullptr)
+	{
+
+	}
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UStaticMesh* StaticMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UAnimMontage* ShootMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UAnimMontage* ReloadMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundBase* SoundBase;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UParticleSystem* FireEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int MaxAmmo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int Damage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<AWeapon> WeaponClass;
+};
 
 UCLASS()
 class SHOOTINGGAMECODE_API AWeapon : public AActor, public IWeaponInterface
@@ -31,10 +72,10 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	//EventTrigger 함수 생성(Implementation을 사용해야하는)
-	void EventTrigger();
+	void EventTrigger(bool IsPress);
 
 	//가상 eventTrigger_implementation 함수 오버라이딩
-	virtual void EventTrigger_Implementation() override;
+	virtual void EventTrigger_Implementation(bool IsPress) override;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	//EventReload 함수 생성(implementation을 사용해야하는)
@@ -85,6 +126,9 @@ public:
 	UFUNCTION()
 	void OnRep_Ammo();
 
+	UFUNCTION()
+	void OnRep_RowName();
+
 public:
 	UFUNCTION(BlueprintPure)
 	FORCEINLINE bool IsCanShoot() const;
@@ -98,31 +142,36 @@ public:
 
 	void SetAmmo(int NewAmmo);
 
+	void SetWeaponData(FName name);
+
+	void SetWeaponRowName(FName name);
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	// WeaponMesh라는 스태틱 메쉬 컴포넌트 생성
 	class UStaticMeshComponent* WeaponMesh;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	//애님 몽타주 레퍼런스 ShootMontage 변수 생성
-	UAnimMontage* ShootMontage;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//UAnimMontage* ShootMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	//애님 몽타주 레퍼런스 reloadMontage 변수 생성
-	UAnimMontage* ReloadMontage;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//UAnimMontage* ReloadMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	//파티클 시스템 레퍼런스 ShootEffect 변수 생성
-	UParticleSystem* ShootEffect;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//UParticleSystem* ShootEffect;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	//사운드 베이스 레퍼런스 ShootSound 변수 생성
-	USoundBase* ShootSound;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//USoundBase* ShootSound;
 
 	UPROPERTY(BlueprintReadWrite)
-	//캐릭터 오브젝트 레퍼런스 OwnChar 변수 생성
 	ACharacter* OwnChar;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Ammo)
 	int Ammo;
+
+	UPROPERTY(ReplicatedUsing = OnRep_RowName)
+	FName RowName;
+		
+	FST_Weapon* weaponData;
+
 };

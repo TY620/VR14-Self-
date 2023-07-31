@@ -247,12 +247,12 @@ void AShootingGameCodeCharacter::ResReload_Implementation()
 	InterfaceObj->Execute_EventReload(EquipWeapon);
 }
 
-void AShootingGameCodeCharacter::ReqShoot_Implementation()
+void AShootingGameCodeCharacter::ReqTrigger_Implementation(bool IsPress)
 {
-	ResShoot();
+	ResTrigger(IsPress);
 }
 
-void AShootingGameCodeCharacter::ResShoot_Implementation()
+void AShootingGameCodeCharacter::ResTrigger_Implementation(bool IsPress)
 {
 	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(EquipWeapon);
 	if(InterfaceObj == nullptr)
@@ -260,7 +260,7 @@ void AShootingGameCodeCharacter::ResShoot_Implementation()
 		return;
 	}
 
-	InterfaceObj->Execute_EventTrigger(EquipWeapon);
+	InterfaceObj->Execute_EventTrigger(EquipWeapon, IsPress);
 }
 
 FRotator AShootingGameCodeCharacter::GetPlayerRotation()
@@ -297,8 +297,11 @@ void AShootingGameCodeCharacter::SetupPlayerInputComponent(class UInputComponent
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AShootingGameCodeCharacter::Look);
 
-		//Shoot
-		EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &AShootingGameCodeCharacter::Shoot);
+		//Trigger // IA_마우스 클릭의 Started(릴리즈)
+		EnhancedInputComponent->BindAction(TriggerAction, ETriggerEvent::Started, this, &AShootingGameCodeCharacter::TriggerPress);
+		// IA_마우스 클릭의 Completed(릴리즈)
+		EnhancedInputComponent->BindAction(TriggerAction, ETriggerEvent::Completed, this, &AShootingGameCodeCharacter::TriggerRelease);
+
 
 		//Reload
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, this, &AShootingGameCodeCharacter::Reload);
@@ -349,9 +352,16 @@ void AShootingGameCodeCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void AShootingGameCodeCharacter::Shoot(const FInputActionValue& Value)
+//블루프린트에서 스타트에 reqshoot
+void AShootingGameCodeCharacter::TriggerPress(const FInputActionValue& Value)
 {
-	ReqShoot();
+	ReqTrigger(true);
+}
+
+//블루프린트에서 컴플리트에 reqshoot
+void AShootingGameCodeCharacter::TriggerRelease(const FInputActionValue& Value)
+{
+	ReqTrigger(false);
 }
 
 void AShootingGameCodeCharacter::Reload(const FInputActionValue& Value)

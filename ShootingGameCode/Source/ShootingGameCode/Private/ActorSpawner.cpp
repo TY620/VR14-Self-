@@ -2,6 +2,7 @@
 
 
 #include "ActorSpawner.h"
+#include "ShootingGameInstance.h"
 #include "Weapon.h"
 
 // Sets default values
@@ -17,6 +18,8 @@ void AActorSpawner::BeginPlay()
 {
 	Super::BeginPlay();
 
+	SpawnRandomWeapon();
+
 	//서버인지 확인
 	if (HasAuthority())
 	{
@@ -30,5 +33,24 @@ void AActorSpawner::BeginPlay()
 void AActorSpawner::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+void AActorSpawner::SpawnRandomWeapon()
+{
+	if (HasAuthority())
+	{
+		//gameInst는 UShootingGameInstance로 형변환
+		UShootingGameInstance* gameInst = Cast<UShootingGameInstance>(GetGameInstance());
+		//rowName은 UShootingGameInstance의 랜덤 행이름 함수
+		FName rowName = gameInst->GetWeaponRandomRowName();
+		//data는 UShootingGameInstance의 
+		FST_Weapon* data = gameInst->GetWeaponRowData(rowName);
+
+		AWeapon* weapon = GetWorld()->SpawnActor<AWeapon>(data->WeaponClass, GetActorTransform());
+		if (weapon)
+		{ 
+			weapon->SetWeaponRowName(rowName);
+		}
+	}
 }
 

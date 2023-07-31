@@ -41,7 +41,7 @@ class AShootingGameCodeCharacter : public ACharacter
 
 	/** Shoot Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* ShootAction;
+	class UInputAction* TriggerAction;
 
 	/** Reload Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -55,7 +55,7 @@ class AShootingGameCodeCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* DropAction;
 
-	//DefaultMappingContext에 IA jump, IA move, IA look, IA shoot, IA reload, IA PressF, IA Drop칸을 생성
+	//DefaultMappingContext에 IA jump, IA move, IA look, IA Trigger, IA reload, IA PressF, IA Drop칸을 생성
 
 public:
 	AShootingGameCodeCharacter();
@@ -70,7 +70,9 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 	/** Called for Shoot input */
-	void Shoot(const FInputActionValue& Value);
+	void TriggerPress(const FInputActionValue& Value);
+	void TriggerRelease(const FInputActionValue& Value);
+
 
 	/** Called for Reload input */
 	void Reload(const FInputActionValue& Value);
@@ -98,11 +100,11 @@ protected:
 public:
 	//소유 클라이언트에서 호출하고 서버에서 실행되는
 	UFUNCTION(Server, Reliable)
-	void ReqShoot();
+	void ReqTrigger(bool IsPress);
 
 	//서버에서 호출하고, 서버와 모든 클라이언트에서 실행되는
 	UFUNCTION(NetMulticast, Reliable)
-	void ResShoot();
+	void ResTrigger(bool IsPress);
 
 	UFUNCTION(Server, Reliable)
 	void ReqReload();

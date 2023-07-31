@@ -23,7 +23,8 @@ class SHOOTINGGAMECODE_API IWeaponInterface
 public:
 	//함수 생성
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	void EventTrigger();
+	// 연사, 점사를 만들기 위한 bool형 변수 생성(Press, Release 개념)
+	void EventTrigger(bool IsPress);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void EventReload();

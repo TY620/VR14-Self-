@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "ShootingGameInstance.h"
 #include "ShootingHUD.h"
 
 
@@ -31,8 +32,6 @@ AWeapon::AWeapon()
 	//움직임이 네트워크에서 복제 가능하도록
 	SetReplicateMovement(true);
 
-	Ammo = 30;
-
 	//WeaponMesh는 루트 컴포넌트
 	SetRootComponent(WeaponMesh);
 
@@ -43,6 +42,14 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	UShootingGameInstance* gameInst = Cast<UShootingGameInstance>(GetGameInstance());
+	weaponData = gameInst->GetWeaponRowData(RowName);
+
+	if (weaponData != nullptr)
+	{
+		SetWeaponData(RowName);
+	}
+
 }
 
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps)const
@@ -50,6 +57,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, Ammo);
+	DOREPLIFETIME(AWeapon, RowName);
 }
 
 // Called every frame
@@ -59,27 +67,27 @@ void AWeapon::Tick(float DeltaTime)
 
 }
 
-void AWeapon::EventTrigger_Implementation()
+void AWeapon::EventTrigger_Implementation(bool IsPress)
 {
-	if (IsValid(ShootMontage) == false)
+	if (IsValid(weaponData->ShootMontage) == false)
 	{
 		return;
 	}
 
 	//캐릭터 레퍼런스 OwnChar는 ShootMontage를 PlayAnimMontage
-	OwnChar->PlayAnimMontage(ShootMontage);
+	OwnChar->PlayAnimMontage(weaponData->ShootMontage);
 }
 
 void AWeapon::EventReload_Implementation()
 {
-	if (IsValid(ReloadMontage) == false)
+	if (IsValid(weaponData->ReloadMontage) == false)
 	{
 		return;
 	}
 	// !IsValid(ReloadMontage);
 
 	//캐릭터 레퍼런스 OwnChar는 ReloadMontage를 PlayAnimMontage
-	OwnChar->PlayAnimMontage(ReloadMontage);
+	OwnChar->PlayAnimMontage(weaponData->ReloadMontage);
 }
 
 
@@ -91,13 +99,13 @@ void AWeapon::EventShoot_Implementation()
 	}
 
 	//EventShoot 함수가 실행되었을때 : ShootEffect를 WeaponMesh의 "Muzzle" 소켓의 위치와 회전값에서 구현
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ShootEffect,
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), weaponData->FireEffect,
 		WeaponMesh->GetSocketLocation("Muzzle"),
 		WeaponMesh->GetSocketRotation("Muzzle"),
 		FVector(0.1f, 0.1f, 0.1f));
 
 	// EventShoot 함수가 실행되었을때 : ShootSound를 WeaponMesh의 "Muzzle" 소켓의 위치에서 구현
-	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), ShootSound,
+	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), weaponData->SoundBase,
 		WeaponMesh->GetSocketLocation("Muzzle"));
 
 	//Aplayercontroller헤더 include
@@ -159,7 +167,7 @@ void AWeapon::IsCanPickUp_Implementation(bool& IsCanPickUp)
 
 void AWeapon::EventResetAmmo_Implementation()
 {
-	SetAmmo(30);
+	SetAmmo(weaponData->MaxAmmo);
 }
 
 void AWeapon::ReqShoot_Implementation(FVector vStart, FVector vEnd)
@@ -202,13 +210,18 @@ void AWeapon::ReqShoot_Implementation(FVector vStart, FVector vEnd)
 		return;
 	}
 	// 데미지 받는 액터, 데미지, 데미지 주는 컨트롤러, 데미지의 원인(AWeapon), 데미지 타입
-	UGameplayStatics::ApplyDamage(HitChar, 10, OwnChar->GetController
+	UGameplayStatics::ApplyDamage(HitChar, weaponData->Damage, OwnChar->GetController
 		(), this, UDamageType::StaticClass());
 }
 
 void AWeapon::OnRep_Ammo()
 {
 	UpdateAmmoToHUD(Ammo);
+}
+
+void AWeapon::OnRep_RowName()
+{
+	SetWeaponData(RowName);
 }
 
 bool AWeapon::IsCanShoot() const
@@ -282,4 +295,19 @@ void AWeapon::SetAmmo(int NewAmmo)
 {
 	Ammo = NewAmmo;
 	OnRep_Ammo();
+}
+
+void AWeapon::SetWeaponData(FName name)
+{
+	UShootingGameInstance* gameInst = Cast<UShootingGameInstance>(GetGameInstance());
+	weaponData = gameInst->GetWeaponRowData(name);
+
+	WeaponMesh->SetStaticMesh(weaponData->StaticMesh);
+	EventResetAmmo();
+}
+
+void AWeapon::SetWeaponRowName(FName name)
+{
+	RowName = name;
+	OnRep_RowName();
 }
