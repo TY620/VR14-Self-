@@ -210,8 +210,7 @@ void AWeapon::ReqShoot_Implementation(FVector vStart, FVector vEnd)
 		return;
 	}
 	// 데미지 받는 액터, 데미지, 데미지 주는 컨트롤러, 데미지의 원인(AWeapon), 데미지 타입
-	UGameplayStatics::ApplyDamage(HitChar, weaponData->Damage, OwnChar->GetController
-		(), this, UDamageType::StaticClass());
+	UGameplayStatics::ApplyDamage(HitChar, weaponData->Damage, OwnChar->GetController(), this, UDamageType::StaticClass());
 }
 
 void AWeapon::OnRep_Ammo()
