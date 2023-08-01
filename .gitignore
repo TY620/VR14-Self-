@@ -115,3 +115,10 @@ Plugins/**/Intermediate/*
 /ShootingGameCode/Saved
 /ShootingGameCode/.vsconfig
 /ShootingGame/Content/RifleAnimsetPro/SourceFiles
+/ShootingGameCode/Plugins/ItemPlugin/Intermediate
+/ShootingGameCode/Plugins/ItemPlugin/Binaries
+/TestPlugin/DerivedDataCache
+/TestPlugin/Intermediate
+/TestPlugin/Saved
+/ShootingGameCode/Plugins/ItemPlugin/Intermediate
+/ShootingGameCode/Plugins/ItemPlugin/Binaries

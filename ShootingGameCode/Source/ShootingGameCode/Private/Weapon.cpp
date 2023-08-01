@@ -7,6 +7,7 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Net/UnrealNetwork.h"
+#include "ShootingPlayerState.h"
 #include "ShootingGameInstance.h"
 #include "ShootingHUD.h"
 
@@ -85,9 +86,10 @@ void AWeapon::EventReload_Implementation()
 		return;
 	}
 	// !IsValid(ReloadMontage);
-
+	
 	//캐릭터 레퍼런스 OwnChar는 ReloadMontage를 PlayAnimMontage
 	OwnChar->PlayAnimMontage(weaponData->ReloadMontage);
+		
 }
 
 
@@ -167,6 +169,23 @@ void AWeapon::IsCanPickUp_Implementation(bool& IsCanPickUp)
 
 void AWeapon::EventResetAmmo_Implementation()
 {
+	if(IsValid(OwnChar) == false)
+	{
+		return;
+	}
+
+	AShootingPlayerState* ps = Cast<AShootingPlayerState>(OwnChar->GetPlayerState());
+
+	if (IsValid(ps) == false)
+	{
+		return;
+	}
+
+	if (ps->UseMag() == false)
+	{
+		return;
+	}
+		
 	SetAmmo(weaponData->MaxAmmo);
 }
 
@@ -302,7 +321,8 @@ void AWeapon::SetWeaponData(FName name)
 	weaponData = gameInst->GetWeaponRowData(name);
 
 	WeaponMesh->SetStaticMesh(weaponData->StaticMesh);
-	EventResetAmmo();
+	SetAmmo(weaponData->MaxAmmo);
+	//EventResetAmmo();
 }
 
 void AWeapon::SetWeaponRowName(FName name)

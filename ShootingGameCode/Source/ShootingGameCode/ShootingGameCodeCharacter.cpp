@@ -166,6 +166,28 @@ void AShootingGameCodeCharacter::ResDrop_Implementation()
 	EquipWeapon = nullptr;
 }
 
+void AShootingGameCodeCharacter::EventGetItem_Implementation(EItemType itemType)
+{
+	switch (itemType)
+	{
+		case EItemType::IT_Heal:
+		{
+			break;
+		}
+		case EItemType::IT_Mag:
+		{
+			AShootingPlayerState* ps = Cast<AShootingPlayerState>(GetPlayerState());
+			
+			if (IsValid(ps))
+			{
+				ps->AddMag();
+			}
+
+			break;
+		}
+	}
+}
+
 void AShootingGameCodeCharacter::EquipTestWeapon(TSubclassOf<class AWeapon> WeaponClass)
 {
 	// EquipWeapon은 월드(로테이션 0,0,0)(로테이터(0,0,0)에서 SpawnActor됨
@@ -227,7 +249,18 @@ AActor* AShootingGameCodeCharacter::FindNearestWeapon()
 
 void AShootingGameCodeCharacter::ReqReload_Implementation() // 서버에서 실행되고
 {
-	// 클라이언트로 전달
+	AShootingPlayerState* ps = Cast<AShootingPlayerState>(GetPlayerState());
+
+	if (IsValid(ps) == false)
+	{
+		return;
+	}
+
+	if (ps->IsCanUseMag() == false)
+	{
+		return;
+	}
+	
 	ResReload();
 }
 

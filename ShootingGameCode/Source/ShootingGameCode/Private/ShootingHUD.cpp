@@ -32,7 +32,10 @@ void AShootingHUD::BindMyPlayerState()
 			ps->Fuc_Dele_UpdataeHP.AddDynamic(this, &AShootingHUD::OnUpdateMyHP);
 			//초기 피 세팅
 			OnUpdateMyHP(ps->CurHP, ps->MaxHP);
+
+			ps->Fuc_Dele_UpdateMag.AddDynamic(this, &AShootingHUD::OnUpdateMyMag);
 			return;
+
 		}
 	}
 
@@ -47,5 +50,9 @@ void AShootingHUD::OnUpdateMyHP_Implementation(float CurHP, float MaxHP)
 }
 
 void AShootingHUD::OnUpdateMyAmmo_Implementation(int Ammo)
+{
+}
+
+void AShootingHUD::OnUpdateMyMag_Implementation(int Mag)
 {
 }

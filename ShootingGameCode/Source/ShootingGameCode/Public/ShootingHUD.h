@@ -32,6 +32,11 @@ public:
 
 	void OnUpdateMyAmmo_Implementation(int Ammo);
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void OnUpdateMyMag(int Mag);
+
+	void OnUpdateMyMag_Implementation(int Mag);
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class UUserWidget> HUDWidgetClass;

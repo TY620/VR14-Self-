@@ -5,11 +5,13 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "ItemInterface.h" // bulid.cs에 ItemPlugin 추가 필요
 #include "ShootingGameCodeCharacter.generated.h"
 
 
+
 UCLASS(config=Game)
-class AShootingGameCodeCharacter : public ACharacter
+class AShootingGameCodeCharacter : public ACharacter, public IItemInterface
 {
 	GENERATED_BODY()
 
@@ -123,6 +125,13 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void ResDrop();
+
+public:
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void EventGetItem(EItemType itemType);
+
+	void EventGetItem_Implementation(EItemType itemType) override;
+
 
 public:
 	//TSubclassOf : AWeapon을 상속 받은 클래스(본인포함)는 입력 값을 받을 수 있음
