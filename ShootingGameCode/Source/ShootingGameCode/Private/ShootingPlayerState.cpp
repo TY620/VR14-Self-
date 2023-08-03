@@ -82,3 +82,10 @@ bool AShootingPlayerState::IsCanUseMag()
 
 	// return (Mag >0) ? true : false;
 }
+
+void AShootingPlayerState::AddHeal(float Heal)
+{
+	CurHP += Heal;
+	CurHP = FMath::Clamp(CurHP, 0.0f, MaxHP);
+	OnRep_CurHP();
+}

@@ -117,6 +117,9 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ReqPressF();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void ResPressF(AActor* weapon);
+
 	UFUNCTION()
 	void OnRep_EquipWeapon();
 
@@ -126,12 +129,19 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void ResDrop();
 
+	UFUNCTION(NetMulticast, Reliable)
+	void ResRevive(FTransform ReviveTrans);
+
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void EventGetItem(EItemType itemType);
 
 	void EventGetItem_Implementation(EItemType itemType) override;
 
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void EventUpdateNameTag();
+
+	void EventUpdateNameTag_Implementation();
 
 public:
 	//TSubclassOf : AWeapon을 상속 받은 클래스(본인포함)는 입력 값을 받을 수 있음
@@ -141,6 +151,17 @@ public:
 	UFUNCTION(BlueprintCallable)
 	AActor* FindNearestWeapon();
 
+	UFUNCTION(BlueprintCallable)
+	void DoRagdoll();
+
+	UFUNCTION(BlueprintCallable)
+	void DoGetUp();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void OnUpdateHp(float CurHp, float MaxHp);
+
+	void OnUpdateHp_Implementation(float CurHp, float MaxHp);
+
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
@@ -148,11 +169,22 @@ public:
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
 public:
+	void DoPickUp(AActor* weapon);
+
+	void DoDrop();
+
+	void BindPlayerState();
+
+	void DoRevive();
+
+	FTransform GetRandomReviveTransform();
+
+	void CreateNameTag();
+
+public:
 	// 리플리케이트 설정
 	// UPROPERTY(ReplicatedUsing = OnFuc) notify -> ???
 	UPROPERTY(Replicated)
-
-	//로테이터 변수 생성
 	FRotator PlayerRotation;
 
 	//플레이어 0(index) 인지 확인하여 회전 값 전달 받는 함수
@@ -160,11 +192,23 @@ public:
 	FRotator GetPlayerRotation();
 
 	// 액터 클래스 EquipWeapon변수 생성
-	// 리플리케이트 설정
-	UPROPERTY(ReplicatedUsing = OnRep_EquipWeapon)
+	UPROPERTY(ReplicatedUsing = OnRep_EquipWeapon) 	// 리플리케이트 설정
 	AActor* EquipWeapon;
 
 	UFUNCTION(BlueprintPure)
 	bool IsEquip();
+
+	bool IsRagdoll;
+
+	FTimerHandle th_BindPlayerState;
+	FTimerHandle th_Revive;
+	FTimerHandle th_NameTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class UCustomUserWidget> NameTagClass;
+
+	UPROPERTY(BlueprintReadWrite)
+	UCustomUserWidget* NameTagWidget;
+
 };
 

@@ -10,6 +10,8 @@ void AShootingHUD::BeginPlay()
 {
 	Super::BeginPlay();
 
+	check(HUDWidgetClass);
+
 	HUDWidget = CreateWidget<UUserWidget>(GetWorld(), HUDWidgetClass);
 	HUDWidget->AddToViewport();
 
@@ -37,6 +39,7 @@ void AShootingHUD::BindMyPlayerState()
 			return;
 
 		}
+
 	}
 
 	FTimerManager& timerManager = GetWorld()->GetTimerManager();

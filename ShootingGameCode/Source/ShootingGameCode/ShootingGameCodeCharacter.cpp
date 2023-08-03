@@ -13,6 +13,11 @@
 #include "Net/UnrealNetwork.h" // 네트워크 관련 코딩 시 필수
 #include "Public/Weapon.h"
 #include "ShootingPlayerState.h"
+#include "Blueprint/UserWidget.h"
+#include "GameFramework/PlayerStart.h"
+#include "CustomUserWidget.h"
+
+//#include 
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -53,6 +58,10 @@ AShootingGameCodeCharacter::AShootingGameCodeCharacter()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+
+	IsRagdoll = false;
+
+	GetMesh()->SetCollisionProfileName("Ragdoll");
 }
 
 //
@@ -63,7 +72,7 @@ void AShootingGameCodeCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 	// 리플리케이트 관련 변수 사용 할 때 마다 여기에 추가 해야됨
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AShootingGameCodeCharacter, PlayerRotation);
-	DOREPLIFETIME(AShootingGameCodeCharacter, EquipWeapon);
+	//DOREPLIFETIME(AShootingGameCodeCharacter, EquipWeapon);
 
 	
 	// PlayerRotation, EquipWeapon
@@ -83,6 +92,9 @@ void AShootingGameCodeCharacter::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+
+	CreateNameTag();
+	BindPlayerState();
 }
 
 //
@@ -93,6 +105,11 @@ void AShootingGameCodeCharacter::Tick(float DeltaTime)
 	if (HasAuthority() == true) // 서버가 맞으면
 	{
 		PlayerRotation = GetControlRotation(); // PlayerRotation은 컨트롤러(플레이어0)의 회전값
+	}
+
+	if (UGameplayStatics::GetPlayerCharacter(GetWorld(), 0) == this && IsRagdoll)
+	{
+		SetActorLocation(GetMesh()->GetSocketLocation("spine_02"), true);
 	}
 
 }
@@ -111,6 +128,55 @@ float AShootingGameCodeCharacter::TakeDamage(float DamageAmount, FDamageEvent co
 
 }
 
+void AShootingGameCodeCharacter::ReqReload_Implementation() // 서버에서 실행되고
+{
+	AShootingPlayerState* ps = Cast<AShootingPlayerState>(GetPlayerState());
+
+	if (IsValid(ps) == false)
+	{
+		return;
+	}
+
+	if (ps->IsCanUseMag() == false)
+	{
+		return;
+	}
+
+	ResReload();
+}
+
+void AShootingGameCodeCharacter::ResReload_Implementation()
+{
+	//InterfaceObj는 IWeaponInterface의 형변환
+	//인터페이스가 있는 무기 레퍼런스인지 확인
+	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(EquipWeapon);
+
+	if (InterfaceObj == nullptr)
+	{
+		return;
+	}
+	// if(!InterfaceObj)
+
+	//유효하면 Reload실행
+	InterfaceObj->Execute_EventReload(EquipWeapon);
+}
+
+void AShootingGameCodeCharacter::ReqTrigger_Implementation(bool IsPress)
+{
+	ResTrigger(IsPress);
+}
+
+void AShootingGameCodeCharacter::ResTrigger_Implementation(bool IsPress)
+{
+	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(EquipWeapon);
+	if (InterfaceObj == nullptr)
+	{
+		return;
+	}
+
+	InterfaceObj->Execute_EventTrigger(EquipWeapon, IsPress);
+}
+
 void AShootingGameCodeCharacter::ReqPressF_Implementation()
 {
 	AActor* nearestWeapon = FindNearestWeapon();
@@ -120,11 +186,19 @@ void AShootingGameCodeCharacter::ReqPressF_Implementation()
 		return;
 	}
 
-	EquipWeapon = nearestWeapon;
-	//소유권 설정(장착 무기의 Owner는 현재 컨트롤러)
-	EquipWeapon->SetOwner(GetController()); 
+	nearestWeapon->SetOwner(GetController());
+	
+	ResPressF(nearestWeapon);
+}
 
-	OnRep_EquipWeapon();
+void AShootingGameCodeCharacter::ResPressF_Implementation(AActor* weapon)
+{
+	if (IsValid(EquipWeapon) == true)
+	{
+		DoDrop();
+	}
+
+	DoPickUp(weapon);
 }
 
 void AShootingGameCodeCharacter::OnRep_EquipWeapon()
@@ -152,19 +226,19 @@ void AShootingGameCodeCharacter::ReqDrop_Implementation()
 
 void AShootingGameCodeCharacter::ResDrop_Implementation()
 {
-	//InterfaceObj는 IWeaponInterface의 형변환 (Weapon 레퍼런스 EquipWeapon을)
-	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(EquipWeapon);
-
-	if (InterfaceObj == nullptr)
-	{
-		return;
-	}
-	// if(!InterfaceObj)
-
-	InterfaceObj->Execute_EventDrop(EquipWeapon, this);
-
-	EquipWeapon = nullptr;
+	DoDrop();
 }
+
+void AShootingGameCodeCharacter::ResRevive_Implementation(FTransform ReviveTrans)
+{
+	DoGetUp();
+
+	FVector Loc = ReviveTrans.GetLocation();
+	FRotator Rot = ReviveTrans.Rotator();
+
+	SetActorLocationAndRotation(Loc, Rot);
+}
+
 
 void AShootingGameCodeCharacter::EventGetItem_Implementation(EItemType itemType)
 {
@@ -172,7 +246,12 @@ void AShootingGameCodeCharacter::EventGetItem_Implementation(EItemType itemType)
 	{
 		case EItemType::IT_Heal:
 		{
-			break;
+			AShootingPlayerState* ps = Cast<AShootingPlayerState>(GetPlayerState());
+			if (IsValid(ps))
+			{
+				ps->AddHeal(100.0f);
+			}
+
 		}
 		case EItemType::IT_Mag:
 		{
@@ -186,6 +265,11 @@ void AShootingGameCodeCharacter::EventGetItem_Implementation(EItemType itemType)
 			break;
 		}
 	}
+}
+
+void AShootingGameCodeCharacter::EventUpdateNameTag_Implementation()
+{
+
 }
 
 void AShootingGameCodeCharacter::EquipTestWeapon(TSubclassOf<class AWeapon> WeaponClass)
@@ -247,53 +331,128 @@ AActor* AShootingGameCodeCharacter::FindNearestWeapon()
 	return nearestWeapon;
 }
 
-void AShootingGameCodeCharacter::ReqReload_Implementation() // 서버에서 실행되고
+void AShootingGameCodeCharacter::DoRagdoll()
+{
+	if (IsRagdoll)
+		return;
+
+	IsRagdoll = true;
+
+	GetMesh()->SetSimulatePhysics(true);
+}
+
+void AShootingGameCodeCharacter::DoGetUp()
+{
+	if (IsRagdoll == false)
+		return;
+
+	IsRagdoll = false;
+
+	GetMesh()->SetSimulatePhysics(false);
+
+	GetMesh()->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+
+	FVector vloc = { 0.0f, 0.0f, -89.0f };
+	FRotator rRot = { 0.0f, 270.0f, 0.0f };
+
+	GetMesh()->SetRelativeLocationAndRotation(vloc, rRot);
+}
+
+void AShootingGameCodeCharacter::DoPickUp(AActor* weapon)
+{
+	EquipWeapon = weapon;
+
+	bUseControllerRotationYaw = true;
+
+	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(weapon);
+
+	if (InterfaceObj == nullptr)
+		return;
+
+	InterfaceObj->Execute_EventPickUp(weapon, this);
+}
+
+void AShootingGameCodeCharacter::OnUpdateHp_Implementation(float CurHp, float MaxHp)
+{
+	if (CurHp > 0)
+	{
+
+	}
+	else
+	{
+		DoRagdoll();
+		if (HasAuthority())
+		{
+			FTimerManager& timerManager = GetWorldTimerManager();
+			timerManager.SetTimer(th_Revive, this, &AShootingGameCodeCharacter::DoRevive, 0.1f, false);
+		}
+	}
+}
+
+
+
+void AShootingGameCodeCharacter::DoDrop()
+{
+	bUseControllerRotationYaw = false;
+
+	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(EquipWeapon);
+
+	if (InterfaceObj == nullptr)
+		return;
+
+	InterfaceObj->Execute_EventDrop(EquipWeapon, this);
+
+	EquipWeapon = nullptr;
+}
+
+void AShootingGameCodeCharacter::BindPlayerState()
 {
 	AShootingPlayerState* ps = Cast<AShootingPlayerState>(GetPlayerState());
+	if (IsValid(ps))
+	{
+		ps->Fuc_Dele_UpdataeHP.AddDynamic(this, &AShootingGameCodeCharacter::OnUpdateHp);
+		
+		//초기 값 세팅
+		OnUpdateHp(ps->CurHP, ps->MaxHP);
+		return;
+	}
 
+	FTimerManager& timerManager = GetWorld()->GetTimerManager();
+	timerManager.SetTimer(th_BindPlayerState, this, &AShootingGameCodeCharacter::BindPlayerState, 0.1f, false);
+}
+
+void AShootingGameCodeCharacter::DoRevive()
+{
+	AShootingPlayerState* ps = Cast<AShootingPlayerState>(GetPlayerState());
 	if (IsValid(ps) == false)
 	{
 		return;
 	}
 
-	if (ps->IsCanUseMag() == false)
-	{
-		return;
-	}
-	
-	ResReload();
+	ps->AddHeal(100.0f);
+
+	ResRevive(GetRandomReviveTransform());
 }
 
-void AShootingGameCodeCharacter::ResReload_Implementation()
+FTransform AShootingGameCodeCharacter::GetRandomReviveTransform()
 {
-	//InterfaceObj는 IWeaponInterface의 형변환
-	//인터페이스가 있는 무기 레퍼런스인지 확인
-	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(EquipWeapon);
-	
-	if (InterfaceObj == nullptr)
-	{
-		return;
-	}
-	// if(!InterfaceObj)
-	
-	//유효하면 Reload실행
-	InterfaceObj->Execute_EventReload(EquipWeapon);
+	TArray<AActor*> arrPS;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), arrPS);
+	AActor* randStart = arrPS[FMath::RandRange(0, arrPS.Num() - 1)];
+
+	return randStart->GetActorTransform();
 }
 
-void AShootingGameCodeCharacter::ReqTrigger_Implementation(bool IsPress)
+void AShootingGameCodeCharacter::CreateNameTag()
 {
-	ResTrigger(IsPress);
-}
+	check(NameTagClass); // NameTagClass 미설정하면 에러메시지
 
-void AShootingGameCodeCharacter::ResTrigger_Implementation(bool IsPress)
-{
-	IWeaponInterface* InterfaceObj = Cast<IWeaponInterface>(EquipWeapon);
-	if(InterfaceObj == nullptr)
-	{
-		return;
-	}
+	NameTagWidget = CreateWidget<UCustomUserWidget>(GetWorld(), NameTagClass);
+	NameTagWidget->AddToViewport();
+	NameTagWidget->OwnChar = this;
 
-	InterfaceObj->Execute_EventTrigger(EquipWeapon, IsPress);
+	FTimerManager& timerManager = GetWorld()->GetTimerManager();
+	timerManager.SetTimer(th_NameTag, this, &AShootingGameCodeCharacter::EventUpdateNameTag, 0.01f, true);
 }
 
 FRotator AShootingGameCodeCharacter::GetPlayerRotation()
@@ -351,6 +510,12 @@ void AShootingGameCodeCharacter::SetupPlayerInputComponent(class UInputComponent
 
 void AShootingGameCodeCharacter::Move(const FInputActionValue& Value)
 {
+	//죽으면 입력 불가
+	if (IsRagdoll == true)
+	{
+		return;
+	}
+
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 

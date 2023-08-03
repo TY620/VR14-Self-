@@ -9,7 +9,6 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDele_UpdateHP_TwoParams, float, CurHP, float, MaxHP);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDele_UpdateMag_OneParam, int, Mag);
 
-
 /**
  * 
  */
@@ -43,6 +42,9 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	bool IsCanUseMag();
+
+	UFUNCTION(BlueprintCallable)
+	void AddHeal(float Heal);
 
 public:
 	//리플리케이트 -> OnRep
