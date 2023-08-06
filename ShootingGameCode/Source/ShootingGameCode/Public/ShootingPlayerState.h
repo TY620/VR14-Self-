@@ -61,7 +61,7 @@ public:
 
 	//이벤트 디스패쳐로 사용하기 위한 키워드
 	UPROPERTY(BlueprintAssignable, VisibleAnywhere, BlueprintCallable)
-	FDele_UpdateHP_TwoParams Fuc_Dele_UpdataeHP;
+	FDele_UpdateHP_TwoParams Fuc_Dele_UpdateHP;
 
 	UPROPERTY(BlueprintAssignable, VisibleAnywhere, BlueprintCallable)
 	FDele_UpdateMag_OneParam Fuc_Dele_UpdateMag;

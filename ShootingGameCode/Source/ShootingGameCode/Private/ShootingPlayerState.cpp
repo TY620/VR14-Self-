@@ -27,9 +27,9 @@ void AShootingPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 void AShootingPlayerState::OnRep_CurHP()
 {
 	//이벤트 디스패쳐 호출
-	if (Fuc_Dele_UpdataeHP.IsBound())
+	if (Fuc_Dele_UpdateHP.IsBound())
 	{
-		Fuc_Dele_UpdataeHP.Broadcast(CurHP, MaxHP);
+		Fuc_Dele_UpdateHP.Broadcast(CurHP, MaxHP);
 	}
 }
 

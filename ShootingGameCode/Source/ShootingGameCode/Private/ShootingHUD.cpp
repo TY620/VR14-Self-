@@ -31,7 +31,7 @@ void AShootingHUD::BindMyPlayerState()
 		if (IsValid(ps))
 		{
 			//바인딩
-			ps->Fuc_Dele_UpdataeHP.AddDynamic(this, &AShootingHUD::OnUpdateMyHP);
+			ps->Fuc_Dele_UpdateHP.AddDynamic(this, &AShootingHUD::OnUpdateMyHP);
 			//초기 피 세팅
 			OnUpdateMyHP(ps->CurHP, ps->MaxHP);
 
