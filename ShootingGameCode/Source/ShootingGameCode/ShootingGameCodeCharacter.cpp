@@ -59,6 +59,8 @@ AShootingGameCodeCharacter::AShootingGameCodeCharacter()
 
 	GetMesh()->SetCollisionProfileName("Ragdoll");
 	IsRagdoll = false;
+
+	OnDestroyed.AddDynamic(this, &AShootingGameCodeCharacter::OnCharacterDestroyed);
 }
 
 void AShootingGameCodeCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -105,6 +107,9 @@ void AShootingGameCodeCharacter::Tick(float DeltaTime)
 
 float AShootingGameCodeCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	if (EventInstigator == nullptr)
+		return 0.0f;
+
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow,
 		FString::Printf(TEXT("TakeDamage EventInstigator=%s"), *EventInstigator->GetName()));
 
@@ -115,6 +120,14 @@ float AShootingGameCodeCharacter::TakeDamage(float DamageAmount, FDamageEvent co
 	ps->AddDamage(DamageAmount);
 
 	return DamageAmount;
+}
+
+void AShootingGameCodeCharacter::OnCharacterDestroyed(AActor* DestroyedActor)
+{
+	if (IsValid(NameTagWidget) == false)
+		return;
+	
+	NameTagWidget->RemoveFromParent();
 }
 
 void AShootingGameCodeCharacter::ReqReload_Implementation()

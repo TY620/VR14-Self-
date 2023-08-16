@@ -55,7 +55,7 @@ class AShootingGameCodeCharacter : public ACharacter, public IItemInterface
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* DropAction;
 
-	/** Drop Input Action */
+	/** Grenade Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 		class UInputAction* GrenadeAction;
 
@@ -103,6 +103,9 @@ protected:
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent,
 		class AController* EventInstigator, AActor* DamageCauser) override;
 
+	UFUNCTION()
+	void OnCharacterDestroyed(AActor* DestroyedActor);
+
 public:
 	//소유 클라이언트에서 호출하고 서버에서 실행되는
 	UFUNCTION(Server, Reliable)
@@ -144,12 +147,12 @@ public:
 
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-		void EventGetItem(EItemType itemType);
+	void EventGetItem(EItemType itemType);
 
 	void EventGetItem_Implementation(EItemType itemType) override;
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-		void EventUpdateNameTag();
+	void EventUpdateNameTag();
 
 	void EventUpdateNameTag_Implementation();
 public:

@@ -15,6 +15,13 @@ void AShootingHUD::BeginPlay()
 	HUDWidget = CreateWidget<UUserWidget>(GetWorld(), HUDWidgetClass);
 	HUDWidget->AddToViewport();
 
+	APlayerController* player0 = GetWorld()->GetFirstPlayerController();
+	if (IsValid(player0) == false)
+		return;
+
+	player0->SetInputMode(FInputModeGameOnly());
+	player0->bShowMouseCursor = false;
+
 	BindMyPlayerState();
 }
 
