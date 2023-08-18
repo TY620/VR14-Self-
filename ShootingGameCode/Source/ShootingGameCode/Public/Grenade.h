@@ -51,5 +51,4 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UParticleSystem* FireEffect;
-
 };

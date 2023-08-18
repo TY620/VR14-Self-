@@ -13,9 +13,8 @@ UCLASS()
 class SHOOTINGGAMECODE_API UCustomUserWidget : public UUserWidget
 {
 	GENERATED_BODY()
-
+	
 public:
 	UPROPERTY(BlueprintReadWrite)
 	ACharacter* OwnChar;
-
 };

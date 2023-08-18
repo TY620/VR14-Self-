@@ -13,7 +13,7 @@ void AEntryHUD::BeginPlay()
 
 	HudWidget = CreateWidget<UUserWidget>(GetWorld(), HudWidgetClass);
 	HudWidget->AddToViewport();
-	
+
 	APlayerController* player0 = GetWorld()->GetFirstPlayerController();
 	if (IsValid(player0) == false)
 		return;

@@ -6,9 +6,8 @@
 #include "GameFramework/PlayerState.h"
 #include "ShootingPlayerState.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDele_UpdateHP_TwoParams, float, CurHP, float, MaxHP);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FDele_UpdateHp_TwoParams, float, CurHp, float, MaxHp);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDele_UpdateMag_OneParam, int, Mag);
-
 /**
  * 
  */
@@ -16,16 +15,16 @@ UCLASS()
 class SHOOTINGGAMECODE_API AShootingPlayerState : public APlayerState
 {
 	GENERATED_BODY()
-
+	
 public:
 	AShootingPlayerState();
 
 public:
 	UFUNCTION()
-	void OnRep_CurHP();
+	void OnRep_CurHp();
 
 	UFUNCTION()
-	void OnRep_MaxHP();
+	void OnRep_MaxHp();
 
 	UFUNCTION()
 	void OnRep_Mag();
@@ -47,21 +46,17 @@ public:
 	void AddHeal(float Heal);
 
 public:
-	//리플리케이트 -> OnRep
-	UPROPERTY(ReplicatedUsing = OnRep_CurHP)
-	float CurHP;
+	UPROPERTY(ReplicatedUsing = OnRep_CurHp)
+	float CurHp;
 
-	//리플리케이트 -> OnRep
-	UPROPERTY(ReplicatedUsing = OnRep_MaxHP)
-	float MaxHP;
+	UPROPERTY(ReplicatedUsing = OnRep_MaxHp)
+	float MaxHp;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Mag)
 	int Mag;
 
-
-	//이벤트 디스패쳐로 사용하기 위한 키워드
 	UPROPERTY(BlueprintAssignable, VisibleAnywhere, BlueprintCallable)
-	FDele_UpdateHP_TwoParams Fuc_Dele_UpdateHP;
+	FDele_UpdateHp_TwoParams Fuc_Dele_UpdateHp;
 
 	UPROPERTY(BlueprintAssignable, VisibleAnywhere, BlueprintCallable)
 	FDele_UpdateMag_OneParam Fuc_Dele_UpdateMag;

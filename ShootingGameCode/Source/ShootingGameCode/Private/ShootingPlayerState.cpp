@@ -2,70 +2,66 @@
 
 
 #include "ShootingPlayerState.h"
-//리플리케이트를 위해 네트워크 헤더 추가
 #include "Net/UnrealNetwork.h"
 
 AShootingPlayerState::AShootingPlayerState()
 {
-	CurHP = 100;
-	MaxHP = 100;
+	CurHp = 100;
+	MaxHp = 100;
 	Mag = 0;
 }
 
-void AShootingPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps)const
+void AShootingPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	
-	//리플리케이트 하기 위해서
-	DOREPLIFETIME(AShootingPlayerState, CurHP);
-	DOREPLIFETIME(AShootingPlayerState, MaxHP);
+	DOREPLIFETIME(AShootingPlayerState, CurHp);
+	DOREPLIFETIME(AShootingPlayerState, MaxHp);
 	DOREPLIFETIME(AShootingPlayerState, Mag);
-
 }
 
-void AShootingPlayerState::OnRep_CurHP()
+void AShootingPlayerState::OnRep_CurHp()
 {
-	//이벤트 디스패쳐 호출
-	if (Fuc_Dele_UpdateHP.IsBound())
-	{
-		Fuc_Dele_UpdateHP.Broadcast(CurHP, MaxHP);
-	}
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow,
+		FString::Printf(TEXT("OnRep_CurHp=%f"), CurHp));
+
+	if (Fuc_Dele_UpdateHp.IsBound())
+		Fuc_Dele_UpdateHp.Broadcast(CurHp, MaxHp);
 }
 
-void AShootingPlayerState::OnRep_MaxHP()
+void AShootingPlayerState::OnRep_MaxHp()
 {
 }
 
 void AShootingPlayerState::OnRep_Mag()
 {
-	if (Fuc_Dele_UpdateMag.IsBound())
-	{
-		Fuc_Dele_UpdateMag.Broadcast(Mag);
-	}
+	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow,
+		FString::Printf(TEXT("OnRep_Mag=%d"), Mag));
 
+	if (Fuc_Dele_UpdateMag.IsBound())
+		Fuc_Dele_UpdateMag.Broadcast(Mag);
 }
 
 void AShootingPlayerState::AddDamage(float Damage)
 {
-	CurHP = CurHP - Damage;
+	CurHp = CurHp - Damage;
+	CurHp = FMath::Clamp(CurHp, 0.0f, MaxHp);
 
-	OnRep_CurHP();
+	OnRep_CurHp();
 }
 
 void AShootingPlayerState::AddMag()
 {
 	Mag = Mag + 1;
+
 	OnRep_Mag();
 }
 
 bool AShootingPlayerState::UseMag()
 {
 	if (IsCanUseMag() == false)
-	{
 		return false;
-	}
-	
+
 	Mag = Mag - 1;
 	OnRep_Mag();
 
@@ -75,17 +71,15 @@ bool AShootingPlayerState::UseMag()
 bool AShootingPlayerState::IsCanUseMag()
 {
 	if (Mag <= 0)
-	{
 		return false;
-	}
-	return true;
 
-	// return (Mag >0) ? true : false;
+	return true;
 }
 
 void AShootingPlayerState::AddHeal(float Heal)
 {
-	CurHP += Heal;
-	CurHP = FMath::Clamp(CurHP, 0.0f, MaxHP);
-	OnRep_CurHP();
+	CurHp = CurHp + Heal;
+	CurHp = FMath::Clamp(CurHp, 0.0f, MaxHp);
+
+	OnRep_CurHp();
 }

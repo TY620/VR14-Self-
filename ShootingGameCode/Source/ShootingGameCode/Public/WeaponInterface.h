@@ -6,7 +6,6 @@
 #include "UObject/Interface.h"
 #include "WeaponInterface.generated.h"
 
-
 UINTERFACE(Blueprintable)
 class UWeaponInterface : public UInterface
 {
@@ -21,9 +20,7 @@ class SHOOTINGGAMECODE_API IWeaponInterface
 	GENERATED_BODY()
 
 public:
-	//함수 생성
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	// 연사, 점사를 만들기 위한 bool형 변수 생성(Press, Release 개념)
 	void EventTrigger(bool IsPress);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
@@ -38,11 +35,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void EventDrop(ACharacter* targetChar);
 
-	//bool형 반환값 설정
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void IsCanPickUp(bool& IsCanPickUp);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void EventResetAmmo();
-
 };

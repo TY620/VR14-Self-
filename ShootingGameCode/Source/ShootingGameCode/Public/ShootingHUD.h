@@ -13,19 +13,17 @@ UCLASS()
 class SHOOTINGGAMECODE_API AShootingHUD : public AHUD
 {
 	GENERATED_BODY()
-
+	
 public:
 	virtual void BeginPlay() override;
 
 public:
 	void BindMyPlayerState();
 
-	//BlueprintNativeEvent : 블루프린트에서 재정의 // 블루프린트로  설정
-	//블루프린트에서 함수 오버라이드 가능
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	void OnUpdateMyHP(float CurHP, float MaxHP);
+	void OnUpdateMyHp(float CurHp, float MaxHp);
 
-	void OnUpdateMyHP_Implementation(float CurHP, float MaxHP);
+	void OnUpdateMyHp_Implementation(float CurHp, float MaxHp);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
 	void OnUpdateMyAmmo(int Ammo);
@@ -39,11 +37,10 @@ public:
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<class UUserWidget> HUDWidgetClass;
+	TSubclassOf<class UUserWidget> HudWidgetClass;
 
 	UPROPERTY(BlueprintReadWrite)
-	UUserWidget* HUDWidget;
-	
-	//타이머 핸들 
+	UUserWidget* HudWidget;
+
 	FTimerHandle th_BindMyPlayerState;
 };

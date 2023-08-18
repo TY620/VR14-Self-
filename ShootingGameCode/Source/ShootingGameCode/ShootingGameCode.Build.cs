@@ -8,12 +8,14 @@ public class ShootingGameCode : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "HeadMountedDisplay", "EnhancedInput", "UMG", "ItemPlugin", "OnlineSubsystem", "OnlineSubsystemUtils" });
-        
-		PublicIncludePaths.AddRange(new string[] { "ShootingGameCode", "ShootingGameCode/Public" });
-		
-		PrivateIncludePaths.AddRange(new string[] { "ShootingGameCode/Private" });
-        
-		DynamicallyLoadedModuleNames.Add("OnlineSubsystemNull");
-	}
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", 
+			"Engine", "InputCore", "HeadMountedDisplay", "EnhancedInput", 
+			"UMG", "ItemPlugin", "OnlineSubsystem", "OnlineSubsystemUtils" });
+
+		PublicIncludePaths.AddRange(new string[] { "ShootingGameCode", "ShootingGameCode/Public", "ShootingGameCode/Public/Lobby" });
+
+		PrivateIncludePaths.AddRange(new string[] { "ShootingGameCode/Private", "ShootingGameCode/Private/Lobby" });
+
+        DynamicallyLoadedModuleNames.Add("OnlineSubsystemNull");
+    }
 }

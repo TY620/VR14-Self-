@@ -30,15 +30,12 @@ AGrenade::AGrenade()
 void AGrenade::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 	if (HasAuthority() == false)
-	{
 		return;
-	}
 
 	FTimerManager& timerManager = GetWorld()->GetTimerManager();
 	timerManager.SetTimer(th_Delay, this, &AGrenade::EventExplosion, 5.0f, false);
-		
 }
 
 // Called every frame
@@ -50,8 +47,11 @@ void AGrenade::Tick(float DeltaTime)
 
 void AGrenade::ResExplosion_Implementation()
 {
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FireEffect, Sphere->GetComponentTransform());
-	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), SoundBase, Sphere->GetComponentLocation());
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FireEffect,
+		Sphere->GetComponentTransform());
+
+	UGameplayStatics::SpawnSoundAtLocation(GetWorld(), SoundBase,
+		Sphere->GetComponentLocation());
 
 	Destroy();
 }
@@ -71,7 +71,12 @@ void AGrenade::ApplyGrenadeDamage()
 	float DamageFalloff = 0.1f;
 	TArray<AActor*> ignoreActor;
 
-	UGameplayStatics::ApplyRadialDamageWithFalloff(GetWorld(), 100, 10, Origin, innerRadius, OuterRadius,DamageFalloff, UDamageType::StaticClass(), ignoreActor, this, instigater);
+	UGameplayStatics::ApplyRadialDamageWithFalloff(
+		GetWorld(), 100, 10,
+		Origin,	innerRadius,OuterRadius,
+		DamageFalloff, UDamageType::StaticClass(),
+		ignoreActor, this, instigater
+	);
 
 	PushCharacter();
 }
@@ -85,9 +90,7 @@ void AGrenade::PushCharacter()
 	{
 		ACharacter* pChar = Cast<ACharacter>(target);
 		if (IsValid(pChar) == false)
-		{
 			continue;
-		}
 
 		FVector vStart = Sphere->GetComponentLocation();;
 		FVector vTarget = target->GetActorLocation();
@@ -108,8 +111,5 @@ FVector AGrenade::CalcPushImpulse(FVector Start, FVector Target)
 	FVector impulse = fowardVec * velocity;
 
 	return impulse;
-	
 }
-
-
 

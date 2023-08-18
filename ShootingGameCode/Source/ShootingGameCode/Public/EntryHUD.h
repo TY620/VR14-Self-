@@ -16,7 +16,7 @@ class SHOOTINGGAMECODE_API AEntryHUD : public AHUD
 
 public:
 	virtual void BeginPlay() override;
-
+	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class UUserWidget> HudWidgetClass;

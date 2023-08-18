@@ -13,9 +13,7 @@ UCLASS()
 class SHOOTINGGAMECODE_API UAnimNotify_Reload : public UAnimNotify
 {
 	GENERATED_BODY()
-
-public:
-	//Notify 함수 정의
-	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 	
+public:
+	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
 };

@@ -28,10 +28,6 @@ public:
 	void SpawnRandomWeapon();
 
 public:
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	//Actor를 상속 받아 입력값을 만들 수 있는(변수 눈깔 열기?)
-	// 블루프린트에서 SpawnClass에 Weapon을 넣어줌
 	TSubclassOf<AActor> SpawnClass;
-
 };

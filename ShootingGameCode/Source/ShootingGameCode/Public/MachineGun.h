@@ -19,6 +19,5 @@ public:
 
 	void LoopShootMontage();
 
-	FTimerHandle th_LoopShoot;
-
+	FTimerHandle th_loopShoot;
 };

@@ -26,10 +26,8 @@ FST_Weapon* UShootingGameInstance::GetWeaponRowData(FName name)
 
 FName UShootingGameInstance::GetWeaponRandomRowName()
 {
-	if(IsValid(WeaponData) == false)
-	{
+	if (IsValid(WeaponData) == false)
 		return FName();
-	}
 
 	TArray<FName> names = WeaponData->GetRowNames();
 	FName randName = names[FMath::RandRange(0, names.Num() - 1)];
@@ -147,12 +145,14 @@ void UShootingGameInstance::FindSessions(TSharedPtr<const FUniqueNetId> UserId, 
 
 		if (Sessions.IsValid() && UserId.IsValid())
 		{
-			//검색 세팅
+			/*
+				Fill in all the SearchSettings, like if we are searching for a LAN game and how many results we want to have!
+			*/
 			SessionSearch = MakeShareable(new FOnlineSessionSearch());
 
 			SessionSearch->bIsLanQuery = bIsLAN;
 			SessionSearch->MaxSearchResults = 20;
-			SessionSearch->PingBucketSize = 50; // (핑 50이하만)
+			SessionSearch->PingBucketSize = 50;
 
 			// We only want to set this Query Setting if "bIsPresence" is true
 			if (bIsPresence)
@@ -197,11 +197,9 @@ void UShootingGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 			// If we have found at least 1 session, we just going to debug them. You could add them to a list of UMG Widgets, like it is done in the BP version!
 			if (SessionSearch->SearchResults.Num() > 0)
 			{
-			
-				TArray<FBlueprintSessionResult> bpSessionReults;
-				//sessionresult는 searchresult된 Num만큼 크기를 세팅
-				bpSessionReults.SetNum(SessionSearch->SearchResults.Num());
-				
+				TArray<FBlueprintSessionResult> bpSessionResults;
+				bpSessionResults.SetNum(SessionSearch->SearchResults.Num());
+
 				// "SessionSearch->SearchResults" is an Array that contains all the information. You can access the Session in this and get a lot of information.
 				// This can be customized later on with your own classes to add more information that can be set and displayed
 				for (int32 SearchIdx = 0; SearchIdx < SessionSearch->SearchResults.Num(); SearchIdx++)
@@ -209,21 +207,20 @@ void UShootingGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 					// OwningUserName is just the SessionName for now. I guess you can create your own Host Settings class and GameSession Class and add a proper GameServer Name here.
 					// This is something you can't do in Blueprint for example!
 					GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, FString::Printf(TEXT("Session Number: %d | Sessionname: %s "), SearchIdx + 1, *(SessionSearch->SearchResults[SearchIdx].Session.OwningUserName)));
-					//bpsessionresult 배열에 sessionsearch result를 넣어줌
-					bpSessionReults[SearchIdx].OnlineResult = SessionSearch->SearchResults[SearchIdx];
+
+					bpSessionResults[SearchIdx].OnlineResult = SessionSearch->SearchResults[SearchIdx];
 				}
 
-				//결과 받아서 호출
-				OnUpdateSessionResult(bpSessionReults);
+				OnUpdateSessionResult(bpSessionResults);
 
 				if (Fuc_Dele_SessionResult.IsBound())
-					Fuc_Dele_SessionResult.Broadcast(true, bpSessionReults);
+					Fuc_Dele_SessionResult.Broadcast(true, bpSessionResults);
 			}
 		}
 	}
 }
 
-bool UShootingGameInstance::JoinSession(TSharedPtr<const FUniqueNetId> UserId, FName SessionName, const FOnlineSessionSearchResult& SearchResult) //블루프린트에서는 결과 구조체(searchResult)
+bool UShootingGameInstance::JoinSession(TSharedPtr<const FUniqueNetId> UserId, FName SessionName, const FOnlineSessionSearchResult& SearchResult)
 {
 	// Return bool
 	bool bSuccessful = false;
@@ -277,15 +274,18 @@ void UShootingGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSess
 
 			if (PlayerController && Sessions->GetResolvedConnectString(SessionName, TravelURL))
 			{
+				GEngine->AddOnScreenDebugMessage(-1, 60.f, FColor::Red, FString::Printf(TEXT("TravelURL = %s"), *TravelURL));
+
 				FString strIPAddress, strPort;
 				int32 Port = 7777;
+				//172.16.2.186:0
 				TravelURL.Split(TEXT(":"), &strIPAddress, &strPort, ESearchCase::IgnoreCase, ESearchDir::FromStart);
 
-				FString NewTraveIURL = FString::Printf(TEXT("%s,%d"), *strIPAddress, Port);
+				FString NewTravelURL = FString::Printf(TEXT("%s:%d"), *strIPAddress, Port);
 
 				// Finally call the ClienTravel. If you want, you could print the TravelURL to see
 				// how it really looks like
-				PlayerController->ClientTravel(NewTraveIURL, ETravelType::TRAVEL_Absolute);
+				PlayerController->ClientTravel(NewTravelURL, ETravelType::TRAVEL_Absolute);
 			}
 		}
 	}
@@ -316,25 +316,28 @@ void UShootingGameInstance::OnDestroySessionComplete(FName SessionName, bool bWa
 	}
 }
 
-void UShootingGameInstance::StartOnlineGame(bool bIsLAN, int MaxNumPlayers)
+void UShootingGameInstance::StartOnlineGame(bool bIsLAN, int MaxNumPlayers, FString Name)
 {
 	// Creating a local player where we can get the UserID from
 	ULocalPlayer* const Player = GetFirstGamePlayer();
+	if (Player == nullptr)
+		return;
 
 	IOnlineSubsystem* OnlineSubsystem = IOnlineSubsystem::Get();
-	if(OnlineSubsystem == nullptr)
+	if (OnlineSubsystem == nullptr)
 		return;
 
-	IOnlineIdentityPtr IdentityIneterface = OnlineSubsystem->GetIdentityInterface();
-	if (IdentityIneterface.IsValid() == false)
+	IOnlineIdentityPtr IdentityInterface = OnlineSubsystem->GetIdentityInterface();
+	if (IdentityInterface.IsValid() == false)
 		return;
 
-	const FUniqueNetIdPtr UniqueNetId = IdentityIneterface->GetUniquePlayerId(Player->GetControllerId());
+	const FUniqueNetIdPtr UniqueNetId = IdentityInterface->GetUniquePlayerId(Player->GetControllerId());
 	if (UniqueNetId.IsValid() == false)
 		return;
 
+	SetUserName(Name);
+
 	// Call our custom HostSession function. GameSessionName is a GameInstance variable
-	// Create Session 세팅(블루프린트)
 	HostSession(UniqueNetId, GameSessionName, bIsLAN, true, MaxNumPlayers);
 }
 
@@ -348,19 +351,22 @@ void UShootingGameInstance::FindOnlineGames()
 	if (OnlineSubsystem == nullptr)
 		return;
 
-	IOnlineIdentityPtr IdentityIneterface = OnlineSubsystem->GetIdentityInterface();
-	if (IdentityIneterface.IsValid() == false)
+	IOnlineIdentityPtr IdentityInterface = OnlineSubsystem->GetIdentityInterface();
+	if (IdentityInterface.IsValid() == false)
 		return;
 
-	const FUniqueNetIdPtr UniqueNetId = IdentityIneterface->GetUniquePlayerId(Player->GetControllerId());
+	const FUniqueNetIdPtr UniqueNetId = IdentityInterface->GetUniquePlayerId(Player->GetControllerId());
 	if (UniqueNetId.IsValid() == false)
 		return;
 
 	FindSessions(UniqueNetId, true, true);
 }
 
-void UShootingGameInstance::JoinOnlineGame()
+void UShootingGameInstance::JoinOnlineGame(FBlueprintSessionResult SessionResult, FString Name)
 {
+	if (SessionResult.OnlineResult.IsValid() == false)
+		return;
+
 	ULocalPlayer* const Player = GetFirstGamePlayer();
 	if (Player == nullptr)
 		return;
@@ -369,35 +375,17 @@ void UShootingGameInstance::JoinOnlineGame()
 	if (OnlineSubsystem == nullptr)
 		return;
 
-	IOnlineIdentityPtr IdentityIneterface = OnlineSubsystem->GetIdentityInterface();
-	if (IdentityIneterface.IsValid() == false)
+	IOnlineIdentityPtr IdentityInterface = OnlineSubsystem->GetIdentityInterface();
+	if (IdentityInterface.IsValid() == false)
 		return;
 
-	const FUniqueNetIdPtr UniqueNetId = IdentityIneterface->GetUniquePlayerId(Player->GetControllerId());
+	const FUniqueNetIdPtr UniqueNetId = IdentityInterface->GetUniquePlayerId(Player->GetControllerId());
 	if (UniqueNetId.IsValid() == false)
 		return;
 
-	// Just a SearchResult where we can save the one we want to use, for the case we find more than one!
-	FOnlineSessionSearchResult SearchResult;
+	SetUserName(Name);
 
-	// If the Array is not empty, we can go through it
-	if (SessionSearch->SearchResults.Num() > 0)
-	{
-		for (int32 i = 0; i < SessionSearch->SearchResults.Num(); i++)
-		{
-			// To avoid something crazy, we filter sessions from ourself
-			if (SessionSearch->SearchResults[i].Session.OwningUserId != UniqueNetId)
-			{
-				SearchResult = SessionSearch->SearchResults[i];
-
-				// Once we found sounce a Session that is not ours, just join it. Instead of using a for loop, you could
-				// use a widget where you click on and have a reference for the GameSession it represents which you can use
-				// here
-				JoinSession(UniqueNetId, GameSessionName, SearchResult);
-				break;
-			}
-		}
-	}
+	JoinSession(UniqueNetId, GameSessionName, SessionResult.OnlineResult);
 }
 
 void UShootingGameInstance::DestroySessionAndLeaveGame()
@@ -423,7 +411,6 @@ void UShootingGameInstance::Shutdown()
 	Super::Shutdown();
 }
 
-void UShootingGameInstance::OnUpdateSessionResult_Implementation(const TArray<FBlueprintSessionResult>& SessionResult)
+void UShootingGameInstance::OnUpdateSessionResult_Implementation(const TArray<FBlueprintSessionResult>& SessionResults)
 {
-
 }
