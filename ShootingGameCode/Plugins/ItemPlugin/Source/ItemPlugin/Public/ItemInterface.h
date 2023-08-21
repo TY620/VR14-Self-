@@ -6,7 +6,7 @@
 #include "UObject/Interface.h"
 #include "ItemInterface.generated.h"
 
-UENUM(BlueprintType) // ¿­°ÅÇü
+UENUM(BlueprintType)
 enum class EItemType : uint8
 {
 	IT_Heal UMETA(DisplayName = "Heal"),
@@ -24,11 +24,9 @@ class UItemInterface : public UInterface
  */
 class ITEMPLUGIN_API IItemInterface
 {
-public:
 	GENERATED_BODY()
 
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = Event)
 	void EventGetItem(EItemType itemType);
-
 };

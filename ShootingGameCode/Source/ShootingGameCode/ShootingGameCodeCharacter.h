@@ -146,6 +146,12 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ReqSpawnGrenade(FVector Start, FVector Impluse);
 
+	UFUNCTION(Server, Reliable)
+	void ReqAddKill();
+
+	UFUNCTION(Server, Reliable)
+	void ReqAddDeath();
+
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void EventGetItem(EItemType itemType);
@@ -156,6 +162,7 @@ public:
 	void EventUpdateNameTag();
 
 	void EventUpdateNameTag_Implementation();
+
 public:
 	UFUNCTION(BlueprintCallable)
 	void EquipTestWeapon(TSubclassOf<class AWeapon> WeaponClass);
@@ -173,6 +180,11 @@ public:
 	void OnUpdateHp(float CurHp, float MaxHp);
 
 	void OnUpdateHp_Implementation(float CurHp, float MaxHp);
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void OnUpdateUserNametag(const FString& name);
+
+	void OnUpdateUserNametag_Implementation(const FString& name);
 
 public:
 	/** Returns CameraBoom subobject **/

@@ -6,7 +6,7 @@
 #include "GameFramework/PlayerState.h"
 #include "LobbyPlayerState.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDele_UpdateUserName, const FString&, UserName);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDele_Lobby_UserName, const FString&, UserName);
 /**
  * 
  */
@@ -28,11 +28,14 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetUserName(const FString& NewName);
 
+	UFUNCTION(BlueprintPure)
+	FString GetUserName() { return UserName; };
+
 	void UpdateBind();
 
 public:
 	UPROPERTY(BlueprintAssignable, VisibleAnywhere, BlueprintCallable)
-	FDele_UpdateUserName Func_Dele_UpdateUserName;
+	FDele_Lobby_UserName Func_Dele_UpdateUserName;
 
 private:
 	UPROPERTY(ReplicatedUsing = OnRep_UserName)

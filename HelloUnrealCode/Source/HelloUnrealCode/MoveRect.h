@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Public/Tool/SwitchTool.h"
 #include "GameFramework/Actor.h"
 #include "MoveRect.generated.h"
 
@@ -13,7 +14,6 @@ enum class EN_MoveType : uint8
 	MoveUp UMETA(DisplayName = "Up"),
 	MoveLeft UMETA(DisplayName = "Left"),
 	MoveDown UMETA(DisplayName = "Down"),
-
 };
 
 UCLASS()
@@ -33,12 +33,19 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditAnyWhere, BlueprintReadWrite)
-		class USceneComponent* Root;
+public:
+	UFUNCTION(BlueprintCallable)
+	void OnEventOverlap(bool IsOverlap);
 
-	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, meta = (AllowPrivateAcess = "true"))
-		class UStaticMeshComponent* StaticMesh;
+	UFUNCTION(BlueprintCallable)
+	void OnCompEventOverlap(bool IsOverlap);
 
+public:
 	EN_MoveType MoveType;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TObjectPtr<ASwitchTool> TargetSwitch;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UEventComponent* EventComp;
 };

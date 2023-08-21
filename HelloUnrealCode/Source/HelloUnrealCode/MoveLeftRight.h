@@ -26,18 +26,24 @@ public:
 
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
-	void EventOverlap(bool IsOverlap); // eventinterface¿« ≤Æµ•±‚?
+	void EventOverlap(bool IsOverlap);
 
-	virtual void EventOverlap_Implementaion(bool IsOverlap) override;
+	virtual void EventOverlap_Implementation(bool IsOverlap) override;
+
+
+	UFUNCTION(BlueprintNativeEvent)
+	void AAA();
+
+	virtual void AAA_Implementation();
 
 public:
-	UPROPERTY(EditAnyWhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class USceneComponent* Root;
 
-	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, meta = (AllowPrivateAcess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* StaticMesh;
 
 	bool IsMoveRight;
-	bool IsPlay;
 
+	bool IsPlay;
 };

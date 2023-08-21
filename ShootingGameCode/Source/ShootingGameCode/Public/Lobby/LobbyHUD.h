@@ -13,7 +13,10 @@ UCLASS()
 class SHOOTINGGAMECODE_API ALobbyHUD : public AHUD
 {
 	GENERATED_BODY()
-	
+
+public:
+	virtual void BeginPlay() override;
+
 public:
 	void BindPlayerState(class ALobbyPlayerState* PlayerState);
 
@@ -21,4 +24,11 @@ public:
 	void OnUpdateUserName(const FString& userName);
 
 	void OnUpdateUserName_Implementation(const FString& userName);
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class UUserWidget> HudWidgetClass;
+
+	UPROPERTY(BlueprintReadWrite)
+	UUserWidget* HudWidget;
 };

@@ -3,6 +3,7 @@
 
 #include "ShootingHUD.h"
 #include "Blueprint/UserWidget.h"
+#include "Kismet/GameplayStatics.h"
 #include "ShootingPlayerState.h"
 
 void AShootingHUD::BeginPlay()
@@ -45,6 +46,21 @@ void AShootingHUD::BindMyPlayerState()
 	timerManager.SetTimer(th_BindMyPlayerState, this, &AShootingHUD::BindMyPlayerState, 0.1f, false);
 }
 
+void AShootingHUD::BindPlayerState(AShootingPlayerState* PlayerState)
+{
+	if (IsValid(PlayerState))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 60.0f, FColor::Yellow,
+		FString::Printf(TEXT("(Client)BindPlayerState userName=%s"), *PlayerState->GetUserName()));
+
+		PlayerState->Func_Dele_UpdateUserName.AddDynamic(this, &AShootingHUD::OnUpdateUserName);
+		OnUpdateUserName(PlayerState->GetUserName());
+
+		PlayerState->Fuc_Dele_UpdateKillDeath.AddDynamic(this, &AShootingHUD::OnUpdateKillDeath);
+		OnUpdateKillDeath(PlayerState->GetKill(), PlayerState->GetDeath());
+	}
+}
+
 void AShootingHUD::OnUpdateMyHp_Implementation(float CurHp, float MaxHp)
 {
 }
@@ -55,4 +71,36 @@ void AShootingHUD::OnUpdateMyAmmo_Implementation(int Ammo)
 
 void AShootingHUD::OnUpdateMyMag_Implementation(int Mag)
 {
+}
+
+void AShootingHUD::OnUpdateUserName_Implementation(const FString& userName)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 60.0f, FColor::Yellow,
+	FString::Printf(TEXT("(Client)OnUpdateUserName userName=%s"), *userName));
+}
+
+void AShootingHUD::OnUpdateKillDeath_Implementation(int kill, int death)
+{
+}
+
+void AShootingHUD::GetPlayerListSortedByKill(TArray<AShootingPlayerState*>& playerstates)
+{
+	TArray<AActor*> arrActors;
+
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AShootingPlayerState::StaticClass(), arrActors);
+	for (AActor* iter : arrActors)
+	{
+		AShootingPlayerState* pPS = Cast<AShootingPlayerState>(iter);
+		if (IsValid(pPS) == false)
+			continue;
+
+		playerstates.Push(pPS);
+	}
+		// playerstates의 배열을 비교(AShootingPlayerState의 Kill A,B를)
+		playerstates.Sort([](const AShootingPlayerState& A, const AShootingPlayerState& B)
+		{
+			return A.Kill > B.Kill;
+		});
+
+
 }

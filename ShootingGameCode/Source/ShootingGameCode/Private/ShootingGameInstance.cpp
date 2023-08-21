@@ -129,7 +129,7 @@ void UShootingGameInstance::OnStartOnlineGameComplete(FName SessionName, bool bW
 	// If the start was successful, we can open a NewMap if we want. Make sure to use "listen" as a parameter!
 	if (bWasSuccessful)
 	{
-		UGameplayStatics::OpenLevel(GetWorld(), "ThirdPersonMap", true, "listen");
+		UGameplayStatics::OpenLevel(GetWorld(), "LobbyLevel", true, "listen");
 	}
 }
 

@@ -6,7 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "BaseItem.generated.h"
 
-//#include "ItemInterface.h"
 enum class EItemType : uint8;
 
 UCLASS()
@@ -26,20 +25,17 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-public: 
+public:
 	UFUNCTION()
 	void MeshBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 public:
-	//플러그인 패키징에 필요한 변수는 Category 선언이 필요함
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 	UStaticMeshComponent* StaticMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
-	class USphereComponent* Sphere; // 전방선언
+	class USphereComponent* Sphere;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 	EItemType eItemType;
-
-
 };

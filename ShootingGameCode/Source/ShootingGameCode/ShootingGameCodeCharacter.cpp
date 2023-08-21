@@ -115,7 +115,16 @@ float AShootingGameCodeCharacter::TakeDamage(float DamageAmount, FDamageEvent co
 	if (IsValid(ps) == false)
 		return 0.0f;
 
-	ps->AddDamage(DamageAmount);
+	if (ps->AddDamage(DamageAmount) == false)
+		return DamageAmount;
+	
+	ps->AddDeath();
+
+	AShootingPlayerState* pKillerps = Cast<AShootingPlayerState> (EventInstigator->PlayerState);
+	if (IsValid(pKillerps) == false)
+		return DamageAmount;
+
+	pKillerps->AddKill();
 
 	return DamageAmount;
 }
@@ -227,6 +236,26 @@ void AShootingGameCodeCharacter::ReqSpawnGrenade_Implementation(FVector Start, F
 
 	grenade->instigater = GetController();
 	grenade->StaticMesh->AddImpulse(Impluse);
+}
+
+void AShootingGameCodeCharacter::ReqAddKill_Implementation()
+{
+	AShootingPlayerState* pPlayerState = Cast <AShootingPlayerState>(GetPlayerState());
+
+	if (IsValid(pPlayerState) == false)
+		return;
+
+	pPlayerState->AddKill();
+}
+
+void AShootingGameCodeCharacter::ReqAddDeath_Implementation()
+{
+	AShootingPlayerState* pPlayerState = Cast <AShootingPlayerState>(GetPlayerState());
+
+	if (IsValid(pPlayerState) == false)
+		return;
+
+	pPlayerState->AddDeath();
 }
 
 void AShootingGameCodeCharacter::EventGetItem_Implementation(EItemType itemType)
@@ -345,6 +374,10 @@ void AShootingGameCodeCharacter::OnUpdateHp_Implementation(float CurHp, float Ma
 	}
 }
 
+void AShootingGameCodeCharacter::OnUpdateUserNametag_Implementation(const FString& name)
+{
+}
+
 void AShootingGameCodeCharacter::DoPickUp(AActor* weapon)
 {
 	//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, TEXT("DoPickUp"));
@@ -382,6 +415,9 @@ void AShootingGameCodeCharacter::BindPlayerState()
 	{
 		ps->Fuc_Dele_UpdateHp.AddDynamic(this, &AShootingGameCodeCharacter::OnUpdateHp);
 		OnUpdateHp(ps->CurHp, ps->MaxHp);
+		
+		ps->Func_Dele_UpdateUserName.AddDynamic(this, &AShootingGameCodeCharacter::OnUpdateUserNametag);
+		OnUpdateUserNametag(ps->GetUserName());
 		return;
 	}
 
@@ -607,16 +643,6 @@ void AShootingGameCodeCharacter::GrenadeRelease(const FInputActionValue& Value)
 
 void AShootingGameCodeCharacter::Test(const FInputActionValue& Value)
 {
-	FTimerManager& timermanager = GetWorld()->GetTimerManager();
-
-	if (timermanager.TimerExists(th_Grenade) == false)
-	{
-		timermanager.SetTimer(th_Grenade, this, &AShootingGameCodeCharacter::ShowGrenadeGuideLine, 0.01, true);
-		//DoGetUp();
-	}
-	else
-	{
-		timermanager.ClearTimer(th_Grenade);
-		//DoRagdoll();
-	}
+	ReqAddKill();
+	ReqAddDeath();
 }

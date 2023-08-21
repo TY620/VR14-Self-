@@ -2,6 +2,7 @@
 
 
 #include "MoveRect.h"
+#include "Tool/EventComponent.h"
 
 // Sets default values
 AMoveRect::AMoveRect()
@@ -9,12 +10,7 @@ AMoveRect::AMoveRect()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-	StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-
-	SetRootComponent(Root);
-	StaticMesh->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
-	StaticMesh->SetRelativeTransform(FTransform::Identity);
+	EventComp = CreateDefaultSubobject<UEventComponent>(TEXT("EventComp"));
 }
 
 // Called when the game starts or when spawned
@@ -22,6 +18,10 @@ void AMoveRect::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	if(IsValid(TargetSwitch))
+		TargetSwitch->FDele_EventOverlap.AddDynamic(this, &AMoveRect::OnEventOverlap);
+
+	EventComp->FDele_EventOverlap.AddDynamic(this, &AMoveRect::OnCompEventOverlap);
 }
 
 // Called every frame
@@ -32,45 +32,35 @@ void AMoveRect::Tick(float DeltaTime)
 	switch (MoveType)
 	{
 	case EN_MoveType::MoveRight:
-	{
-		StaticMesh->AddRelativeLocation(FVector(1, 0, 0));
-		if (StaticMesh->GetRelativeLocation().X > 100)
 		{
-			MoveType = EN_MoveType :: MoveUp;
 		}
-	}
 		break;
 	case EN_MoveType::MoveUp:
-	{
-		StaticMesh->AddRelativeLocation(FVector(0, 0, 1));
-		if (StaticMesh->GetRelativeLocation().Z > 100)
 		{
-			MoveType = EN_MoveType::MoveLeft;
 		}
-
-	}
 		break;
-	case EN_MoveType::MoveLeft:	
-	{
-		StaticMesh->AddRelativeLocation(FVector(-1, 0, 0));
-		if (StaticMesh->GetRelativeLocation().X < 0)
+	case EN_MoveType::MoveLeft:
 		{
-			MoveType = EN_MoveType::MoveDown;
 		}
-	}
 		break;
 	case EN_MoveType::MoveDown:
-	{
-		StaticMesh->AddRelativeLocation(FVector(0, 0, -1));
-		if (StaticMesh->GetRelativeLocation().Z < 0)
 		{
-			MoveType = EN_MoveType::MoveRight;
 		}
-	}
 		break;
-
+	default:
+		break;
 	}
-	
+}
 
+void AMoveRect::OnEventOverlap(bool IsOverlap)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Blue, FString::Printf(TEXT("MoveRect OnEventOverlap IsOverlap=%s")
+		, IsOverlap ? TEXT("True") : TEXT("False")));
+}
+
+void AMoveRect::OnCompEventOverlap(bool IsOverlap)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Black, FString::Printf(TEXT("MoveRect OnCompEventOverlap IsOverlap=%s")
+		, IsOverlap ? TEXT("True") : TEXT("False")));
 }
 
